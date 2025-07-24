@@ -5,6 +5,7 @@ Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a mo
 ---
 
 ## Features
+
 - **Automated spider**: Crawls and extracts BLM campsite data on a schedule or on demand.
 - **Scheduled updates:** A GitHub Actions cron job runs the crawler biweekly to keep data fresh.
 - **REST API**: Query, filter, and update campsites via HTTP endpoints.
@@ -53,30 +54,6 @@ graph TB
 
 - **API Base URL:** [`https://blm-spider.onrender.com/api/v1`](https://blm-spider-api.onrender.com/api/v1)
 - **Swagger Docs:** [`https://blm-spider.onrender.com/docs`](https://blm-spider-api.onrender.com/docs)
-
----
-
-## Getting Started
-
-### Install dependencies
-```sh
-npm install
-```
-
-### Run the API server
-```sh
-npm start
-```
-The server will start on `http://localhost:8080` by default.
-
-### Run the spider manually
-```sh
-npx ts-node src/cron.ts
-```
-This will crawl the BLM site and update `data/blm-campsites.json`.
-
-### Schedule automatic updates
-A cron job is set up in `src/cron.ts` to run every 2 weeks. You can also use the included GitHub Actions workflow (`.github/workflows/scrape.yml`) to keep your data fresh in the cloud.
 
 ---
 
@@ -158,9 +135,24 @@ GET /api/v1/campsites/123e4567-e89b-12d3-a456-426614174000
 ```
 ---
 
-## Data Model
+## Getting Started
 
-See [`src/types.ts`](src/types.ts) for the full `Campsite` interface. Key fields:
+### Install dependencies
+```sh
+npm install
+```
 
-- `id`, `name`, `url`, `description`, `lat`, `lng`, `state`, `source`
-- (optional) `directions`, `activities`, `campgrounds`, `wildlife`, `fees`, `stayLimit`, `images`
+### Run the API server
+```sh
+npm start
+```
+The server will start on `http://localhost:8080` by default.
+
+### Run the spider manually
+```sh
+npx ts-node src/cron.ts
+```
+This will crawl the BLM site and update `data/blm-campsites.json`.
+
+### Schedule automatic updates
+A cron job is set up in `src/cron.ts` to run every 2 weeks. 
