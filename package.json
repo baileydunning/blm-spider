@@ -1,0 +1,39 @@
+{
+  "name": "blm-spider",
+  "version": "1.0.0",
+  "description": "Scrape BLM dispersed campsite data by crawling their official site (starting at search results), parsing each campsite detail page, and saving structured data to JSON.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@turf/turf": "^7.2.0",
+    "@types/express": "^5.0.3",
+    "axios": "^1.11.0",
+    "better-sqlite3": "^12.2.0",
+    "cheerio": "^1.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "node-cron": "^4.2.1",
+    "p-limit": "^4.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "uuid": "^11.1.0",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cors": "^2.8.19",
+    "@types/node": "^24.1.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
