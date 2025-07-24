@@ -57,6 +57,35 @@ graph TB
 
 ---
 
+## Data Model
+
+```typescript
+interface Campsite {
+  id: string;
+  name: string;
+  url: string;
+  lat: number;
+  lng: number;
+  state: string;
+  mapLink: string;
+  description?: string;
+  directions?: string;
+  activities?: string[];
+  campgrounds?: string[];
+  wildlife?: string[];
+  fees?: string;
+  stayLimit?: string;
+  images?: CampsiteImage[];
+  source: 'BLM';
+}
+
+interface CampsiteImage {
+  src: string;
+  alt?: string;
+  credit?: string;
+}
+```
+
 ## API Documentation
 
 ### Base URL
@@ -83,22 +112,19 @@ GET /api/v1/campsites?state=Colorado&limit=10&offset=0
 ```json
 [
   {
-    "id": "...",
-    "name": "...",
-    "url": "...",
-    "description": "...",
-    "lat": 0,
-    "lng": 0,
-    "state": "Colorado",
-    "mapLink": "www.map.com",
-    "directions": "...",
-    "activities": ["camping", "hiking"],
-    "campgrounds": ["Main Campground"],
-    "wildlife": ["deer", "eagle"],
-    "fees": "$10/night",
-    "stayLimit": "14 days",
-    "images": [{"src": "img.com", "alt": "caption", "credit": "credit"}],
-    "source": "BLM",
+    "id": "28430a4f-ce40-478d-a7b1-0c23d9c49dbb",
+    "name": "Middle Fork of the Powder River Campground",
+    "url": "https://www.blm.gov/visit/middle-fork-powder-river-campground-0",
+    "description": "Astride a blue-ribbon trout stream, this remote and picturesque campground features five camping sites with fire rings, restroom and drinking water. Use of the area is free with a 14-day limit on camping (as on all public lands). The Middle Fork of the Powder River Campground, located at an elevation of 7,500 feet, is open from May through September.",
+    "lat": 43.579304,
+    "lng": -107.140476,
+    "state": "Wyoming",
+    "mapLink": "https://www.openstreetmap.org/export/embed.html?bbox=-107.15047600000001,43.569304,-107.130476,43.589304&layer=mapnik&marker=43.579304,-107.140476",
+    "directions": "From Ten Sleep, the area is reached by driving 20 miles south on State Highway 434 to Big Trails. From there turn left on the graveled Dry Farm Road and drive about 13 miles to the Hazelton Road. Turn right and drive about 17 miles to the campground. For other routes to the campground, check with the BLM offices in Worland, Buffalo, or Casper.",
+    "activities": [
+      "CAMPING"
+    ],
+    "source": "BLM"
   },
   // ...
 ]
@@ -117,23 +143,35 @@ GET /api/v1/campsites/123e4567-e89b-12d3-a456-426614174000
 **Response:**
 ```json
 {
-  "id": "123e4567-e89b-12d3-a456-426614174000",
-  "name": "...",
-  "url": "...",
-  "description": "...",
-  "lat": 0,
-  "lng": 0,
-  "state": "Colorado",
-  "mapLink": "www.map.com",
-  "directions": "...",
-  "activities": ["camping", "hiking"],
-  "campgrounds": ["Main Campground"],
-  "wildlife": ["deer", "eagle"],
-  "fees": "$10/night",
-  "stayLimit": "14 days",
-  "images": [{"src": "img.com", "alt": "caption", "credit": "credit"}],
-  "source": "BLM",
-}
+    "id": "5a1e40b5-4aec-4624-94e0-6f9e757a61de",
+    "name": "Valley of the Giants Outstanding Natural Area",
+    "url": "https://www.blm.gov/visit/valley-giants-outstanding-natural-area",
+    "description": "Some of the largest Douglas firs and Western Hemlocks in the Oregon Coast Range can be found in the Bureau of Land Management’s Valley of the Giants. Many of these trees are twenty feet in circumference, 200 feet tall, and 400 to 450 years old. Though a windstorm blew it down in 1981, the largest reached a circumference of thirty-five feet and was approximately 600 years old. Believed to be the second-largest Douglas fir in Oregon, the tree was called “Big Guy”. In the 1970s, public concern grew over the increasing rarity of exceptionally large trees.",
+    "lat": 44.936289,
+    "lng": -123.715592,
+    "state": "Oregon",
+    "mapLink": "https://www.openstreetmap.org/export/embed.html?bbox=-123.725592,44.926289000000004,-123.705592,44.946289&layer=mapnik&marker=44.936289,-123.715592",
+    "directions": "Visitors should contact the Northwest Oregon District Office for directions and current conditions. Route closed when public fire restrictions are in effect. Fire Restrictions - Oregon-Washington Bureau of Land Management (blm.gov) Oregon Department of Forestry Public Fire Restrictions",
+    "fees": "No fees.",
+    "images": [
+      {
+        "src": "https://cdn.recreation.gov/public/2020/06/09/21/21/10057631_a27238fc-a182-4009-84dc-9955a7e1433e.jpeg",
+        "alt": "Tall trees on display in the Valley of the Giants.",
+        "credit": "Bureau of Land Management"
+      },
+      {
+        "src": "https://cdn.recreation.gov/public/2020/06/09/21/21/10057631_25633784-8c26-448b-8c03-effe44554984.jpeg",
+        "alt": "A child hugs a tree in the Valley of the Giants.",
+        "credit": "Bureau of Land Management"
+      },
+      {
+        "src": "https://cdn.recreation.gov/public/2020/06/09/21/21/10057631_13fbb1f3-e81d-400c-adf4-338efd18a462.jpeg",
+        "alt": "View of massive trees in a forested setting.",
+        "credit": "Bureau of Land Management"
+      }
+    ],
+    "source": "BLM"
+  }
 ```
 ---
 
