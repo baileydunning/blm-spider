@@ -4,6 +4,13 @@ Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a mo
 
 ---
 
+## Live Deployment
+
+- **API Base URL:** [`https://blm-spider.onrender.com/api/v1`](https://blm-spider.onrender.com/api/v1)
+- **Swagger Docs:** [`https://blm-spider.onrender.com/docs`](https://blm-spider.onrender.com/docs)
+
+---
+
 ## Features
 
 - **Automated spider**: Crawls and extracts BLM campsite data on a schedule or on demand.
@@ -47,13 +54,6 @@ graph TB
     style H fill:#fff3e0
     style L fill:#e8f5e8
 ```
-
----
-
-## Live Deployment
-
-- **API Base URL:** [`https://blm-spider.onrender.com/api/v1`](https://blm-spider.onrender.com/api/v1)
-- **Swagger Docs:** [`https://blm-spider.onrender.com/docs`](https://blm-spider.onrender.com/docs)
 
 ---
 
