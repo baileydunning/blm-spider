@@ -126,7 +126,7 @@ GET /api/v1/campsites?state=Colorado&limit=10&offset=0
     ],
     "source": "BLM"
   },
-  // ...
+  ...
 ]
 ```
 
