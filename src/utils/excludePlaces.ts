@@ -4,7 +4,12 @@ export function excludePlaces(site: Partial<Campsite>): { ok: boolean; reason: s
   const exclusionTerms = [
     'shooting range',
     'day use',
-    'science center'
+    'day-use',
+    'day use only',
+    'day-use only',
+    'science center',
+    'interpretive site',
+    'habitat management',
   ];
 
   const campingTerms = [
@@ -19,13 +24,19 @@ export function excludePlaces(site: Partial<Campsite>): { ok: boolean; reason: s
     return { ok: false, reason: 'Coordinates are (0,0)' };
   }
 
-  const nameAndActivities = [site.name, ...(site.activities || [])]
+  const allText = [
+    site.name,
+    site.description,
+    site.stayLimit,
+    site.directions,
+    ...(site.activities || [])
+  ]
     .filter((val): val is string => typeof val === 'string')
     .map(val => val.toLowerCase())
     .join(' ');
 
-  const hasCamping = campingTerms.some(term => nameAndActivities.includes(term));
-  const match = exclusionTerms.find(term => nameAndActivities.includes(term));
+  const hasCamping = campingTerms.some(term => allText.includes(term));
+  const match = exclusionTerms.find(term => allText.includes(term));
 
   if (match && !hasCamping) {
     return { ok: false, reason: `Matches "${match}" and has no camping-related content` };

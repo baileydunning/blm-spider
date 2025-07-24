@@ -182,10 +182,10 @@ export class Spider {
 
     const urlParams = new URLSearchParams(this.startUrl.split('?')[1]);
     const query = urlParams.get('query') || '';
-    const originalBase = `${BASE_URL}/visit/search?query=${query}`;
+    const baseUrl = `${BASE_URL}/visit/search?query=${query}`;
 
     console.log('[Spider] Starting crawl...');
-    await crawlPages(originalBase);
+    await crawlPages(baseUrl);
     const jobEnd = performance.now();
     const totalMs = jobEnd - jobStart;
     const totalSeconds = Math.floor(totalMs / 1000);
@@ -200,8 +200,8 @@ export class Spider {
     console.log(`Skipped due to exclusion: ${stats.skipped}`);
     console.log(`Errors: ${stats.errors}`);
     console.log(`Detail fetch durations (ms): avg=${stats.durations.avg}, min=${stats.durations.min.toFixed(1)}, max=${stats.durations.max.toFixed(1)}`);
-    console.log(`[Spider] Total time: ${minutes}m ${seconds}s`);
-    console.log(`[Spider] Final campsite count: ${campsites.length}`);
+    console.log(`Total time: ${minutes}m ${seconds}s`);
+    console.log(`Final campsite count: ${campsites.length}`);
 
     console.timeEnd('[Spider] Total crawl duration');
     return campsites;
