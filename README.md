@@ -10,17 +10,49 @@ Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a mo
 - **REST API**: Query, filter, and update campsites via HTTP endpoints.
 - **JSON storage**: All data is stored in `data/blm-campsites.json`.
 - **Image scraping**: Scrapes official BLM photos with credit and alt text when available.
-- **Multiple sources**: Crawls BLM search by keyword and by camping activity to maximize coverage.
 - **Geolocation enrichment:** Automatically infers the U.S. state from coordinates using @turf/turf and a local GeoJSON file
 - **Exclusion logic**: Filters out irrelevant locations like day use areas or shooting ranges.
 
 ---
 
+## How It Works
+
+```mermaid
+graph TB
+    A[GitHub Actions Cron<br/>Every 2 weeks] --> B[Spider Starts]
+    B --> C[Query BLM Search API<br/>?query=dispersed]
+    C --> D[Get Search Results Pages<br/>Parallel fetching]
+    D --> E[Extract Detail Page URLs<br/>~3000 potential sites]
+    E --> F[Fetch Detail Pages<br/>Parallel with rate limiting]
+    F --> G[Parse Each Detail Page<br/>Extract campsite data]
+    G --> H{Exclusion Filter<br/>Is this a real campsite?}
+    H -->|Exclude| I[Skip: Day-use only,<br/>Shooting ranges, etc.]
+    H -->|Include| J[Extract Data:<br/>Name, description, coordinates,<br/>activities, fees, images]
+    J --> K[Enrich with State Info<br/>Using offline GeoJSON boundaries]
+    K --> L[Save to JSON File<br/>data/blm-campsites.json]
+    L --> M[Commit & Push to GitHub<br/>Updated data available]
+    
+    N[API Server<br/>Express.js] --> O[Read JSON File<br/>Load campsite data]
+    O --> P[REST Endpoints<br/>/api/v1/campsites]
+    P --> Q[Filter & Paginate<br/>By state, limit, offset]
+    Q --> R[Return JSON Response<br/>To client applications]
+    
+    S[Manual Trigger<br/>npx ts-node src/cron.ts] --> B
+    
+    M -.-> O
+    
+    style A fill:#e1f5fe
+    style N fill:#f3e5f5
+    style H fill:#fff3e0
+    style L fill:#e8f5e8
+```
+
+---
 
 ## Live Deployment
 
-- **API Base URL:** [`https://blm-spider-api.onrender.com/api/v1`](https://blm-spider-api.onrender.com/api/v1)
-- **Swagger Docs:** [`https://blm-spider-api.onrender.com/docs`](https://blm-spider-api.onrender.com/docs)
+- **API Base URL:** [`https://blm-spider.onrender.com/api/v1`](https://blm-spider-api.onrender.com/api/v1)
+- **Swagger Docs:** [`https://blm-spider.onrender.com/docs`](https://blm-spider-api.onrender.com/docs)
 
 ---
 
@@ -124,23 +156,11 @@ GET /api/v1/campsites/123e4567-e89b-12d3-a456-426614174000
   "source": "BLM",
 }
 ```
+---
 
 ## Data Model
 
 See [`src/types.ts`](src/types.ts) for the full `Campsite` interface. Key fields:
 
 - `id`, `name`, `url`, `description`, `lat`, `lng`, `state`, `source`
-- `directions`, `activities`, `campgrounds`, `wildlife`, `fees`, `stayLimit`, `images`
-
----
-
-## OpenAPI/Swagger
-
-A full OpenAPI spec is available in [`openapi.yaml`](openapi.yaml), always kept in sync with the data model. Docs can be viewed from the `/docs` endpoint.
-
----
-
-## GitHub Actions & Automation
-
-- `.github/workflows/scrape.yml` runs the spider every 2 weeks and commits changes to the JSON file.
-- You can also run the spider manually with `npx ts-node src/cron.ts`.
+- (optional) `directions`, `activities`, `campgrounds`, `wildlife`, `fees`, `stayLimit`, `images`

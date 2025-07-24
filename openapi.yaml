@@ -16,7 +16,7 @@ paths:
           name: state
           schema:
             type: string
-          description: Filter campsites by U.S. state abbreviation (e.g., "CO", "CA")
+          description: Filter campsites by U.S. state 
         - in: query
           name: limit
           schema:
