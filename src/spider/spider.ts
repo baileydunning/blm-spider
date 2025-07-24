@@ -151,6 +151,7 @@ export class Spider {
             lat: site.lat ?? 0,
             lng: site.lng ?? 0,
             state: site.state || getStateFromCoordinates(site.lat ?? 0, site.lng ?? 0) || '',
+            mapLink: site.mapLink || '',
             directions: site.directions && cleanText(site.directions),
             campgrounds: site.campgrounds,
             activities: site.activities,

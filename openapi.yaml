@@ -4,31 +4,31 @@ info:
   version: 1.0.0
   description: API for accessing BLM dispersed campsite data.
 servers:
-  - url: http://localhost:3000
-    description: Local development server
+- url: http://localhost:3000
+  description: Local development server
 paths:
   /api/v1/campsites:
     get:
       summary: Retrieve all campsites
       description: Returns a list of BLM campsites. Supports optional filtering by state and pagination.
       parameters:
-        - in: query
-          name: state
-          schema:
-            type: string
-          description: Filter campsites by U.S. state 
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-          description: Maximum number of results to return
-        - in: query
-          name: offset
-          schema:
-            type: integer
-            minimum: 0
-          description: Number of results to skip before starting to return results
+      - in: query
+        name: state
+        schema:
+          type: string
+        description: Filter campsites by U.S. state
+      - in: query
+        name: limit
+        schema:
+          type: integer
+          minimum: 1
+        description: Maximum number of results to return
+      - in: query
+        name: offset
+        schema:
+          type: integer
+          minimum: 0
+        description: Number of results to skip before starting to return results
       responses:
         '200':
           description: A list of campsites
@@ -56,12 +56,12 @@ paths:
       summary: Get a single campsite by ID
       description: Retrieves detailed information for a specific campsite.
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: The unique ID of the campsite
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: The unique ID of the campsite
       responses:
         '200':
           description: Campsite found
@@ -87,14 +87,14 @@ components:
     Campsite:
       type: object
       required:
-        - id
-        - name
-        - url
-        - lat
-        - lng
-        - state
-        - description
-        - source
+      - id
+      - name
+      - url
+      - lat
+      - lng
+      - state
+      - mapLink
+      - source
       properties:
         id:
           type: string
@@ -105,17 +105,6 @@ components:
         url:
           type: string
           description: Source webpage URL
-        description:
-          type: string
-          description: Overview or description of the campsite
-        directions:
-          type: string
-          nullable: true
-          description: Directions to the campsite
-        source:
-          type: string
-          enum: [BLM]
-          description: Data source for the campsite
         lat:
           type: number
           description: Latitude coordinate
@@ -125,6 +114,17 @@ components:
         state:
           type: string
           description: U.S. state abbreviation
+        mapLink:
+          type: string
+          description: URL for an embeddable map of the campsite location
+        description:
+          type: string
+          nullable: true
+          description: Overview or description of the campsite
+        directions:
+          type: string
+          nullable: true
+          description: Directions to the campsite
         activities:
           type: array
           items:
@@ -157,11 +157,15 @@ components:
             $ref: '#/components/schemas/CampsiteImage'
           nullable: true
           description: Photos of the campsite
+        source:
+          type: string
+          enum: [ BLM ]
+          description: Data source for the campsite
 
     CampsiteImage:
       type: object
       required:
-        - src
+      - src
       properties:
         src:
           type: string
