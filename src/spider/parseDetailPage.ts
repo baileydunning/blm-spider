@@ -134,12 +134,12 @@ export async function parseDetailPage(url: string): Promise<Partial<Campsite> | 
       lng,
       state,
       directions,
+      activities: activities.length ? activities : undefined,
+      campgrounds: campgrounds.length ? campgrounds : undefined,
+      wildlife: wildlife && wildlife.length ? wildlife : undefined,
       fees,
       stayLimit,
       images: images && images.length ? images : undefined,
-      wildlife: wildlife && wildlife.length ? wildlife : undefined,
-      activities: activities.length ? activities : undefined,
-      campgrounds: campgrounds.length ? campgrounds : undefined,
     };
   } catch (err) {
     console.error(`Error parsing ${url}`, err);
