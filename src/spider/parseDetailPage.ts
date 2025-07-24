@@ -17,20 +17,54 @@ export async function parseDetailPage(url: string): Promise<Partial<Campsite> | 
 
     let description = '';
     const body = $('div.field.contact-block.-body');
-    let overviewP = '';
+    
+    let overviewText = '';
     const overviewHeading = body.find('h2:contains("Overview"), h3:contains("Overview")').first();
     if (overviewHeading.length) {
-      const nextP = overviewHeading.nextAll('p').first();
-      if (nextP.length) {
-        overviewP = nextP.text().trim();
+      let current = overviewHeading.next();
+      const overviewParts: string[] = [];
+      
+      while (current.length && !current.is('h1, h2, h3, h4, h5, h6')) {
+        if (current.is('p') && current.text().trim()) {
+          overviewParts.push(current.text().trim());
+        }
+        current = current.next();
       }
+      
+      if (overviewParts.length === 0) {
+        const allPs = overviewHeading.nextAll('p');
+        overviewParts.push(...allPs.map((_, el) => $(el).text().trim()).get().filter(Boolean));
+      }
+      
+      overviewText = overviewParts.join('\n\n');
     }
+    
     let metaDesc = $('meta[name="description"]').attr('content') ?? '';
-    let firstP = $('p').first().text().trim();
-    const descParts = [overviewP, metaDesc, firstP]
+    
+    let fullBodyText = '';
+    if (!overviewText && !metaDesc) {
+      const allBodyPs = body.find('p');
+      fullBodyText = allBodyPs.map((_, el) => $(el).text().trim()).get().filter(Boolean).join('\n\n');
+    }
+    
+    const descParts = [overviewText, metaDesc, fullBodyText]
       .map(s => s.trim())
       .filter((s, i, arr) => s && arr.indexOf(s) === i);
-    description = descParts.join('\n\n');
+    let descRaw = descParts.join('\n\n');
+    if (descRaw) {
+      const sentences = descRaw.match(/[^.!?\n]+[.!?]?/g) || [descRaw];
+      if (sentences.length > 1) {
+        const last = sentences[sentences.length - 1].trim();
+        if (!last.endsWith('.')) {
+          sentences.pop();
+        }
+        description = sentences.map(s => s.trim()).join(' ');
+      } else {
+        description = descRaw.trim();
+      }
+    } else {
+      description = '';
+    }
 
     let state: string | undefined;
     const stateDiv = $('.field.contact-block.-state');
@@ -107,6 +141,10 @@ export async function parseDetailPage(url: string): Promise<Partial<Campsite> | 
       name = name.replace(/\s*\|\s*Bureau of Land Management\s*$/, '');
     }
 
+    const mapLink = lat && lng
+      ? `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}`
+      : '';
+
     let images: CampsiteImage[] | undefined;
     const imageBlocks = $('div.ridb-image-content');
 
@@ -134,6 +172,7 @@ export async function parseDetailPage(url: string): Promise<Partial<Campsite> | 
       lng,
       state,
       directions,
+      mapLink,
       activities: activities.length ? activities : undefined,
       campgrounds: campgrounds.length ? campgrounds : undefined,
       wildlife: wildlife && wildlife.length ? wildlife : undefined,

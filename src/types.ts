@@ -5,6 +5,7 @@ export interface Campsite {
   lat: number;
   lng: number;
   state: string;
+  mapLink: string;
   description?: string;
   directions?: string;
   activities?: string[];

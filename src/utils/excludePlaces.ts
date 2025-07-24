@@ -10,6 +10,7 @@ export function excludePlaces(site: Partial<Campsite>): { ok: boolean; reason: s
     'science center',
     'interpretive site',
     'habitat management',
+    'schoolhouse'
   ];
 
   const campingTerms = [
@@ -37,6 +38,14 @@ export function excludePlaces(site: Partial<Campsite>): { ok: boolean; reason: s
 
   const hasCamping = campingTerms.some(term => allText.includes(term));
   const match = exclusionTerms.find(term => allText.includes(term));
+
+  if (site.stayLimit && typeof site.stayLimit === 'string') {
+    const stayLimitLower = site.stayLimit.toLowerCase();
+    const stayLimitExclusion = exclusionTerms.find(term => stayLimitLower.includes(term));
+    if (stayLimitExclusion) {
+      return { ok: false, reason: `stayLimit matches "${stayLimitExclusion}"` };
+    }
+  }
 
   if (match && !hasCamping) {
     return { ok: false, reason: `Matches "${match}" and has no camping-related content` };
