@@ -52,8 +52,8 @@ graph TB
 
 ## Live Deployment
 
-- **API Base URL:** [`https://blm-spider.onrender.com/api/v1`](https://blm-spider-api.onrender.com/api/v1)
-- **Swagger Docs:** [`https://blm-spider.onrender.com/docs`](https://blm-spider-api.onrender.com/docs)
+- **API Base URL:** [`https://blm-spider.onrender.com/api/v1`](https://blm-spider.onrender.com/api/v1)
+- **Swagger Docs:** [`https://blm-spider.onrender.com/docs`](https://blm-spider.onrender.com/docs)
 
 ---
 
