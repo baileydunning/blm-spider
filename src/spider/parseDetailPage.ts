@@ -50,7 +50,21 @@ export async function parseDetailPage(url: string): Promise<Partial<Campsite> | 
     const descParts = [overviewText, metaDesc, fullBodyText]
       .map(s => s.trim())
       .filter((s, i, arr) => s && arr.indexOf(s) === i);
-    description = descParts.join('\n\n');
+    let descRaw = descParts.join('\n\n');
+    if (descRaw) {
+      const sentences = descRaw.match(/[^.!?\n]+[.!?]?/g) || [descRaw];
+      if (sentences.length > 1) {
+        const last = sentences[sentences.length - 1].trim();
+        if (!last.endsWith('.')) {
+          sentences.pop();
+        }
+        description = sentences.map(s => s.trim()).join(' ');
+      } else {
+        description = descRaw.trim();
+      }
+    } else {
+      description = '';
+    }
 
     let state: string | undefined;
     const stateDiv = $('.field.contact-block.-state');
@@ -127,32 +141,9 @@ export async function parseDetailPage(url: string): Promise<Partial<Campsite> | 
       name = name.replace(/\s*\|\s*Bureau of Land Management\s*$/, '');
     }
 
-    let mapLink: string | undefined;
-    
-    const mapIframe = $('iframe[src*="map"], iframe[src*="arcgis"], iframe[src*="gis"]').first();
-    if (mapIframe.length) {
-      mapLink = mapIframe.attr('src');
-    } else {
-      $('script').each((_, el) => {
-        const scriptContent = $(el).html() || '';
-        const embedMatch = scriptContent.match(/src["']:\s*["']([^"']*(?:map|arcgis|gis)[^"']*)["']/i);
-        if (embedMatch) {
-          mapLink = embedMatch[1];
-          return false;
-        }
-      });
-      
-      if (!mapLink) {
-        const mapContainer = $('#map_gc, .map-container, [id*="map"]').first();
-        if (mapContainer.length) {
-          mapLink = mapContainer.attr('data-map-url') || mapContainer.attr('data-src');
-        }
-      }
-      
-      if (!mapLink && lat && lng) {
-        mapLink = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}`;
-      }
-    }
+    const mapLink = lat && lng
+      ? `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}`
+      : '';
 
     let images: CampsiteImage[] | undefined;
     const imageBlocks = $('div.ridb-image-content');
