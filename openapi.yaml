@@ -4,8 +4,10 @@ info:
   version: 1.0.0
   description: API for accessing BLM dispersed campsite data.
 servers:
-- url: http://localhost:3000
-  description: Local development server
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://blm-spider.onrender.com/
+    description: Production server
 paths:
   /api/v1/campsites:
     get:
