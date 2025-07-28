@@ -11,8 +11,7 @@ async function runSpiderJob() {
 }
 
 if (!process.env.GITHUB_ACTIONS) {
-  // Run every 2 weeks on Sunday at 2:00 AM
-  cron.schedule('0 2 */14 * *', runSpiderJob);
+  cron.schedule('0 2 * * 0', runSpiderJob);
   console.log('Cronjob scheduled.');
 }
 
