@@ -160,7 +160,7 @@ Retrieve a single campsite by its unique ID.
 
 **Example:**
 ```
-GET /api/v1/campsites/123e4567-e89b-12d3-a456-426614174000
+GET /api/v1/campsites/5a1e40b5-4aec-4624-94e0-6f9e757a61de
 ```
 
 **Response:**
