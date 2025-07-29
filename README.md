@@ -1,6 +1,6 @@
 # BLM Spider
 
-Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a modern API. This project crawls the BLM website, parses each campsite detail page, and saves structured data to a JSON file. A GitHub Actions cron job runs the spider automatically every two weeks. The API allows you to query and filter campsite data. The crawler is optimized for reliability and efficiency with retry logic, connection reuse, and parallel detail page fetching. It also infers missing state information using offline geospatial boundaries—no external API calls required.
+Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a modern API. This project crawls the BLM website, parses each campsite detail page, and saves structured data to a JSON file. A GitHub Actions cron job runs the spider automatically every week. The API allows you to query and filter campsite data. The crawler is optimized for reliability and efficiency with retry logic, connection reuse, and parallel detail page fetching. It also infers missing state information using offline geospatial boundaries powered by Turf.js.
 
 ---
 
@@ -27,7 +27,7 @@ Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a mo
 
 ```mermaid
 graph TB
-    A[GitHub Actions Cron<br/>Every 2 weeks] --> B[Spider Starts]
+    A[GitHub Actions Cron<br/>Every week] --> B[Spider Starts]
     B --> C[Query BLM Search API<br/>?query=dispersed]
     C --> D[Get Search Results Pages<br/>Parallel fetching]
     D --> E[Extract Detail Page URLs<br/>~3000 potential sites]
@@ -35,24 +35,47 @@ graph TB
     F --> G[Parse Each Detail Page<br/>Extract campsite data]
     G --> H{Exclusion Filter<br/>Is this a real campsite?}
     H -->|Exclude| I[Skip: Day-use only,<br/>Shooting ranges, etc.]
-    H -->|Include| J[Extract Data:<br/>Name, description, coordinates,<br/>activities, fees, images]
+    H -->|Include| J[Extract Data:<br/>Name, description, coordinates,<br/>activities, fees, images, etc.]
     J --> K[Enrich with State Info<br/>Using offline GeoJSON boundaries]
     K --> L[Save to JSON File<br/>data/blm-campsites.json]
     L --> M[Commit & Push to GitHub<br/>Updated data available]
     
     N[API Server<br/>Express.js] --> O[Read JSON File<br/>Load campsite data]
-    O --> P[REST Endpoints<br/>/api/v1/campsites]
+    O --> P[List Endpoint<br/>GET /api/v1/campsites]
     P --> Q[Filter & Paginate<br/>By state, limit, offset]
-    Q --> R[Return JSON Response<br/>To client applications]
+    Q --> R[Return JSON Response<br/>All campsites]
+
+    O --> U[Single Endpoint<br/>GET /api/v1/campsites/:id]
+    U --> V[Return JSON Response<br/>Single campsite]
+
+    N --> W[Swagger UI<br/>/docs]
     
     S[Manual Trigger<br/>npx ts-node src/cron.ts] --> B
     
     M -.-> O
-    
-    style A fill:#e1f5fe
-    style N fill:#f3e5f5
-    style H fill:#fff3e0
-    style L fill:#e8f5e8
+
+    style A fill:#01579b,stroke:#4fc3f7,color:#ffffff
+    style B fill:#0277bd,stroke:#4fc3f7,color:#ffffff
+    style C fill:#0288d1,stroke:#4fc3f7,color:#ffffff
+    style D fill:#039be5,stroke:#4fc3f7,color:#ffffff
+    style E fill:#00acc1,stroke:#4dd0e1,color:#ffffff
+    style F fill:#00838f,stroke:#4dd0e1,color:#ffffff
+    style G fill:#006064,stroke:#4dd0e1,color:#ffffff
+    style H fill:#4a148c,stroke:#ce93d8,color:#ffffff
+    style I fill:#6a1b9a,stroke:#ba68c8,color:#ffffff
+    style J fill:#1b5e20,stroke:#81c784,color:#ffffff
+    style K fill:#2e7d32,stroke:#81c784,color:#ffffff
+    style L fill:#388e3c,stroke:#81c784,color:#ffffff
+    style M fill:#43a047,stroke:#81c784,color:#ffffff
+    style N fill:#4527a0,stroke:#9575cd,color:#ffffff
+    style O fill:#512da8,stroke:#9575cd,color:#ffffff
+    style P fill:#5e35b1,stroke:#b39ddb,color:#ffffff
+    style Q fill:#3949ab,stroke:#9fa8da,color:#ffffff
+    style R fill:#1a237e,stroke:#7986cb,color:#ffffff
+    style U fill:#283593,stroke:#9fa8da,color:#ffffff
+    style V fill:#1e88e5,stroke:#90caf9,color:#ffffff
+    style W fill:#00897b,stroke:#4db6ac,color:#ffffff
+    style S fill:#fdd835,stroke:#fff59d,color:#000000
 ```
 
 ---
@@ -137,7 +160,7 @@ Retrieve a single campsite by its unique ID.
 
 **Example:**
 ```
-GET /api/v1/campsites/123e4567-e89b-12d3-a456-426614174000
+GET /api/v1/campsites/5a1e40b5-4aec-4624-94e0-6f9e757a61de
 ```
 
 **Response:**
@@ -195,4 +218,4 @@ npx ts-node src/cron.ts
 This will crawl the BLM site and update `data/blm-campsites.json`.
 
 ### Schedule automatic updates
-A cron job is set up in `src/cron.ts` to run every 2 weeks. 
+A cron job is set up in `src/cron.ts` to run every week. 
