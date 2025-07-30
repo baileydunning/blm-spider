@@ -252,7 +252,7 @@ docker build -t blm-spider .
 ### Run the API server with Docker
 
 ```sh
-docker run -p 8080:8080 -v $(pwd)/data:/app/data blm-spider
+docker run --rm -p 8080:8080 blm-spider
 ```
 
 or using Docker Compose:
@@ -261,5 +261,4 @@ or using Docker Compose:
 docker-compose up --build
 ```
 
-+ The API will be available at http://localhost:8080.
-+ The -v $(pwd)/data:/app/data flag mounts your local data directory into the container, so the API can read and write blm-campsites.json.
+The API will be available at http://localhost:8080.
