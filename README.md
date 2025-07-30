@@ -219,3 +219,30 @@ This will crawl the BLM site and update `data/blm-campsites.json`.
 
 ### Schedule automatic updates
 A cron job is set up in `src/cron.ts` to run every week. 
+
+---
+
+## Docker
+
+You can run the BLM Spider API in a Docker container for easy deployment and isolation.
+
+### Build the Docker image
+
+```sh
+docker build -t blm-spider .
+```
+
+### Run the API server with Docker
+
+```sh
+docker run -p 8080:8080 -v $(pwd)/data:/app/data blm-spider
+```
+
+or using Docker Compose:
+
+```sh
+docker-compose up --build
+```
+
++ The API will be available at http://localhost:8080.
++ The -v $(pwd)/data:/app/data flag mounts your local data directory into the container, so the API can read and write blm-campsites.json.
