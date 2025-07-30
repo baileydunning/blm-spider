@@ -1,0 +1,107 @@
+name: Performance
+
+permissions:
+  pull-requests: write
+
+on:
+  pull_request:
+    types:
+    - opened
+    - synchronize
+    - reopened
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/server
+    outputs:
+      mean_latency: ${{ steps.extract-artillery.outputs.mean_latency }}
+      p95_latency: ${{ steps.extract-artillery.outputs.p95_latency }}
+      p99_latency: ${{ steps.extract-artillery.outputs.p99_latency }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22.x'
+
+    - name: Install backend dependencies
+      run: npm ci
+
+    - name: Build backend
+      run: npm run build
+
+    - name: Start backend
+      run: NODE_ENV=test npm start &
+
+    - name: Wait for backend health endpoint
+      run: |
+        for i in {1..30}; do
+          if curl -sSf http://localhost:3000/health; then
+            echo "Backend is up!"; exit 0
+          fi
+          sleep 2
+        done
+        echo "Backend did not start in time"; exit 1
+
+    - name: Install Artillery
+      run: npm install -g artillery
+
+    - name: Run Artillery load test
+      id: artillery-run
+      run: |
+        printf 'config:\n  target: "http://localhost:3000"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
+        artillery run --output artillery-report.json artillery.yml
+
+    - name: Extract latency metrics from Artillery report
+      id: extract-artillery
+      run: |
+        mean_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].mean // empty' artillery-report.json)
+        p95_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p95 // empty' artillery-report.json)
+        p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
+        echo "mean_latency=$mean_latency" >> $GITHUB_OUTPUT
+        echo "p95_latency=$p95_latency" >> $GITHUB_OUTPUT
+        echo "p99_latency=$p99_latency" >> $GITHUB_OUTPUT
+
+    - name: Compute backend metric statuses
+      id: backend-status
+      run: |
+        mean=${{ steps.extract-artillery.outputs.mean_latency }}
+        p95=${{ steps.extract-artillery.outputs.p95_latency }}
+        p99=${{ steps.extract-artillery.outputs.p99_latency }}
+        # Mean
+        if (( $(echo "$mean < 0.5" | bc -l) )); then mean_status="Outstanding";
+        elif (( $(echo "$mean < 1" | bc -l) )); then mean_status="Excellent";
+        elif (( $(echo "$mean < 2" | bc -l) )); then mean_status="Good";
+        elif (( $(echo "$mean < 5" | bc -l) )); then mean_status="Fair";
+        else mean_status="Needs Major Improvement"; fi
+        # p95
+        if (( $(echo "$p95 < 1" | bc -l) )); then p95_status="Outstanding";
+        elif (( $(echo "$p95 < 2" | bc -l) )); then p95_status="Good";
+        elif (( $(echo "$p95 < 5" | bc -l) )); then p95_status="Fair";
+        else p95_status="Needs Improvement"; fi
+        # p99
+        if (( $(echo "$p99 < 1.5" | bc -l) )); then p99_status="Outstanding";
+        elif (( $(echo "$p99 < 3" | bc -l) )); then p99_status="Good";
+        elif (( $(echo "$p99 < 6" | bc -l) )); then p99_status="Fair";
+        else p99_status="Needs Improvement"; fi
+        echo "mean_status=$mean_status" >> $GITHUB_OUTPUT
+        echo "p95_status=$p95_status" >> $GITHUB_OUTPUT
+        echo "p99_status=$p99_status" >> $GITHUB_OUTPUT
+
+    - name: Post or update PR comment with backend results
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        header: performance-backend
+        message: |
+          ### Backend Latency Report
+
+          | Metric | Value (ms) | Status |
+          |--------|------------|--------|
+          | **Mean** | ${{ steps.extract-artillery.outputs.mean_latency }} | ${{ steps.backend-status.outputs.mean_status }} |
+          | **p95**  | ${{ steps.extract-artillery.outputs.p95_latency }} | ${{ steps.backend-status.outputs.p95_status }} |
+          | **p99**  | ${{ steps.extract-artillery.outputs.p99_latency }} | ${{ steps.backend-status.outputs.p99_status }} |
