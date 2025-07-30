@@ -1,38 +1,30 @@
 openapi: 3.0.3
 info:
-  title: BLM Campsites API
+  title: BLM Spider API
   version: 1.0.0
   description: |
-    Access up-to-date, structured data on Bureau of Land Management (BLM) campsites across the United States.
+    A fast, reliable API for exploring Bureau of Land Management (BLM) dispersed campsites across the U.S. This project combines a clustered Node.js server with a high-performance web crawler to extract and serve structured campsite data from the BLM website. Data is enriched with offline geospatial boundaries and made available through RESTful endpoints with support for filtering and pagination. The crawler is optimized for speed and reliability using parallel page fetching, persistent connections, and retry logic. Updates run automatically each week via a GitHub Actions cron job to keep data fresh.
+    > *Disclaimer: Not all results are guaranteed to be valid campsites. Best-effort filters are applied, but users should verify site status with the BLM before visiting.*
 
-    **Disclaimer:** Not all locations in this dataset are guaranteed to be valid or legal campsites. The spider uses best-effort filtering to exclude obvious non-campsite locations (such as day-use areas and shooting ranges), but some non-campsites may still be included. Always verify site status and regulations with the BLM before visiting.
-
-    This API provides:
-    - A weekly-updated dataset of BLM campsites, including geolocation, activities, images, and more
-    - Fast, filterable endpoints for both bulk and single-campsite queries
-    - Data enriched with inferred U.S. state and elevation (where available)
-    - No external API calls required for geospatial enrichment (uses Turf.js and offline GeoJSON)
-    
-    **CORS Policy**
+    ### CORS Policy 
     All endpoints support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing). This means you can call the API directly from web browsers and client-side applications without additional configuration.
 
-    **Rate Limiting**
-    To ensure fair use and prevent abuse, the API enforces rate limiting:  
+    ### Rate Limiting
+    To ensure fair use and prevent abuse, the API enforces rate limiting:
     - Maximum **100 requests per 15 minutes** per IP address.
     - If you exceed this limit, you will receive a `429 Too Many Requests` error.  
     - Rate limits are enforced globally across all endpoints.
 
-    ### How the Spider Works
-    The spider is a Node.js crawler that:
-    1. Crawls the BLM website's search results for dispersed campsites
-    2. Fetches all result pages in parallel with retry and connection pooling
-    3. Extracts detail page URLs and scrapes each detail page for structured data (name, description, coordinates, activities, images, etc.)
-    4. Infers missing state using Turf.js and a local US states GeoJSON file
-    5. Saves the result to a JSON file, which is committed and pushed by a GitHub Actions workflow every week
-
-    The spider is optimized for reliability and speed using parallel page fetching, connection reuse, retry logic, and efficient in-memory filtering. All geospatial enrichment is performed offline for maximum performance and privacy.
-
-    The API server reads this JSON file and serves it via REST endpoints.
+    ### Features
+    - **Clustered server architecture:** Leverages all CPU cores via Node.js clustering to maximize performance and handle high concurrency.
+    - **High-performance:** Uses parallel fetching, persistent connections, and retry logic for fast, reliable crawling. In-memory filtering reduces noise, and geospatial enrichment is done offline for speed and privacy.
+    - **Automated spider**: Crawls and extracts BLM campsite data on a schedule or on demand.
+    - **Scheduled updates:** A GitHub Actions cron job runs the crawler biweekly to keep data fresh.
+    - **REST API**: Query, filter, and update campsites via HTTP endpoints.
+    - **JSON storage**: All data is stored in `data/blm-campsites.json`.
+    - **Image scraping**: Scrapes official BLM photos with credit and alt text when available.
+    - **Geolocation enrichment:** Automatically infers the U.S. state from coordinates using @turf/turf and a local GeoJSON file
+    - **Exclusion logic**: Filters out irrelevant locations like day use areas or shooting ranges.
   contact:
     name: Bailey Dunning
     url: https://github.com/baileydunning/blm-spider
@@ -55,14 +47,14 @@ paths:
         Returns a list of BLM campsites. Supports optional filtering by state and pagination.
 
         **Usage notes:**
-        - Filter by state using the `state` query parameter (case-insensitive, e.g. `state=Oregon`)
+        - Filter by state using the `state` query parameter (case-insensitive, e.g. `state=Wyoming`)
         - Use `limit` and `offset` for pagination
       parameters:
       - in: query
         name: state
         schema:
           type: string
-        description: Filter campsites by U.S. state (full name, e.g. "Oregon")
+        description: Filter campsites by U.S. state (full name, e.g. "Wyoming")
       - in: query
         name: limit
         schema:
