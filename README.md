@@ -140,6 +140,7 @@ Retrieve all campsites, with optional filtering and pagination.
 
 **Query Parameters:**
 - `state` (string, optional): Filter by state (case-insensitive)
+- `activites` (string, optional): Filter by a list of activities
 - `limit` (integer, optional): Limit the number of results
 - `offset` (integer, optional): Offset for pagination
 

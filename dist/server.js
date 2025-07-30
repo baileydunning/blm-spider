@@ -4,7 +4,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startServer = startServer;
-// src/server.ts
 const express_1 = __importDefault(require("express"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const fs_1 = __importDefault(require("fs"));
@@ -25,7 +24,6 @@ app.use((0, express_rate_limit_1.default)({
     standardHeaders: true,
     legacyHeaders: false,
 }));
-// Cached JSON
 let cachedCampsites = [];
 const dataPath = path_1.default.join(__dirname, '../data/blm-campsites.json');
 function loadCampsites() {
@@ -41,6 +39,13 @@ app.get('/api/v1/campsites', (req, res, next) => {
         if (state) {
             campsites = campsites.filter(site => site.state?.toLowerCase() === state);
         }
+        const activities = req.query.activities;
+        if (activities) {
+            const activityList = activities.split(',').map(a => a.trim().toLowerCase());
+            campsites = campsites.filter(site => Array.isArray(site.activities) &&
+                activityList.every(requested => Array.isArray(site.activities) &&
+                    site.activities.some(activity => activity.trim().toLowerCase() === requested)));
+        }
         const limit = parseInt(req.query.limit, 10);
         const offset = parseInt(req.query.offset, 10);
         if (req.query.limit && (isNaN(limit) || limit < 1)) {
@@ -49,8 +54,13 @@ app.get('/api/v1/campsites', (req, res, next) => {
         if (req.query.offset && (isNaN(offset) || offset < 0)) {
             return res.status(400).json({ error: 'Invalid "offset" parameter' });
         }
-        if (!isNaN(limit) && !isNaN(offset)) {
-            campsites = campsites.slice(offset, offset + limit);
+        const hasLimit = !isNaN(limit);
+        const hasOffset = !isNaN(offset);
+        if (hasLimit) {
+            campsites = campsites.slice(hasOffset ? offset : 0, (hasOffset ? offset : 0) + limit);
+        }
+        else if (hasOffset) {
+            campsites = campsites.slice(offset);
         }
         res.json(campsites);
     }
