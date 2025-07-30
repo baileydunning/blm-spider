@@ -13,16 +13,16 @@ info:
     - Data enriched with inferred U.S. state and elevation (where available)
     - No external API calls required for geospatial enrichment (uses Turf.js and offline GeoJSON)
     
-    ## CORS Policy
+    **CORS Policy**
     All endpoints support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing). This means you can call the API directly from web browsers and client-side applications without additional configuration.
 
-    ## Rate Limiting
+    **Rate Limiting**
     To ensure fair use and prevent abuse, the API enforces rate limiting:  
     - Maximum **100 requests per 15 minutes** per IP address.
     - If you exceed this limit, you will receive a `429 Too Many Requests` error.  
     - Rate limits are enforced globally across all endpoints.
 
-    ## How the Spider Works
+    ### How the Spider Works
     The spider is a Node.js crawler that:
     1. Crawls the BLM website's search results for dispersed campsites
     2. Fetches all result pages in parallel with retry and connection pooling
@@ -30,8 +30,7 @@ info:
     4. Infers missing state using Turf.js and a local US states GeoJSON file
     5. Saves the result to a JSON file, which is committed and pushed by a GitHub Actions workflow every week
 
-    **Optimization:**
-    - The spider is optimized for reliability and speed using parallel page fetching, connection reuse, retry logic, and efficient in-memory filtering. All geospatial enrichment is performed offline for maximum performance and privacy.
+    The spider is optimized for reliability and speed using parallel page fetching, connection reuse, retry logic, and efficient in-memory filtering. All geospatial enrichment is performed offline for maximum performance and privacy.
 
     The API server reads this JSON file and serves it via REST endpoints.
   contact:
