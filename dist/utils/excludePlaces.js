@@ -5,7 +5,13 @@ function excludePlaces(site) {
     const exclusionTerms = [
         'shooting range',
         'day use',
-        'science center'
+        'day-use',
+        'day use only',
+        'day-use only',
+        'science center',
+        'interpretive site',
+        'habitat management',
+        'schoolhouse'
     ];
     const campingTerms = [
         'camp',
@@ -17,12 +23,25 @@ function excludePlaces(site) {
     if (site.lat === 0 && site.lng === 0) {
         return { ok: false, reason: 'Coordinates are (0,0)' };
     }
-    const nameAndActivities = [site.name, ...(site.activities || [])]
+    const allText = [
+        site.name,
+        site.description,
+        site.stayLimit,
+        site.directions,
+        ...(site.activities || [])
+    ]
         .filter((val) => typeof val === 'string')
         .map(val => val.toLowerCase())
         .join(' ');
-    const hasCamping = campingTerms.some(term => nameAndActivities.includes(term));
-    const match = exclusionTerms.find(term => nameAndActivities.includes(term));
+    const hasCamping = campingTerms.some(term => allText.includes(term));
+    const match = exclusionTerms.find(term => allText.includes(term));
+    if (site.stayLimit && typeof site.stayLimit === 'string') {
+        const stayLimitLower = site.stayLimit.toLowerCase();
+        const stayLimitExclusion = exclusionTerms.find(term => stayLimitLower.includes(term));
+        if (stayLimitExclusion) {
+            return { ok: false, reason: `stayLimit matches "${stayLimitExclusion}"` };
+        }
+    }
     if (match && !hasCamping) {
         return { ok: false, reason: `Matches "${match}" and has no camping-related content` };
     }

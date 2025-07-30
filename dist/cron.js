@@ -13,9 +13,13 @@ async function runSpiderJob() {
     (0, fs_1.writeFileSync)('data/blm-campsites.json', JSON.stringify(sites, null, 2));
     console.log(`[CRON] Spider finished. Saved ${sites.length} sites to data/blm-campsites.json.`);
 }
-// Run every 2 weeks on Sunday at 2:00 AM
-node_cron_1.default.schedule('0 2 */14 * *', runSpiderJob);
-if (require.main === module) {
-    runSpiderJob();
+if (!process.env.GITHUB_ACTIONS) {
+    node_cron_1.default.schedule('0 2 * * 0', runSpiderJob);
+    console.log('Cronjob scheduled.');
 }
-console.log('Cronjob scheduled.');
+// If run directly, execute the spider job once and exit
+if (require.main === module) {
+    runSpiderJob().then(() => {
+        process.exit(0);
+    });
+}
