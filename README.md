@@ -1,6 +1,14 @@
 # BLM Spider
 
-Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a modern API. This project crawls the BLM website, parses each campsite detail page, and saves structured data to a JSON file. A GitHub Actions cron job runs the spider automatically every week. The API allows you to query and filter campsite data. The crawler is optimized for reliability and efficiency with retry logic, connection reuse, and parallel detail page fetching. It also infers missing state information using offline geospatial boundaries powered by Turf.js.
+This project provides a high-performance API for discovering Bureau of Land Management (BLM) campsites across the United States. It combines a custom web crawler, scheduled automation, and a clustered Node.js server to deliver reliable, structured campsite data via the /campsites and /campsites/{id} endpoints.
+
+The crawler regularly scans the BLM website, extracts and filters campsite detail pages, and saves the results to a structured JSON dataset. It’s optimized for resilience and speed using parallel fetching, persistent connections, retry logic, and efficient in-memory exclusion rules. Geospatial enrichment is performed entirely offline—inferring U.S. state boundaries from coordinates using Turf.js and a local GeoJSON file.
+
+The server architecture is designed for scalability, using Node.js clustering to maximize CPU utilization and handle concurrent API requests with minimal latency. A GitHub Actions workflow runs the crawler automatically each week, ensuring that the data remains current.
+
+Whether you're building a camping app, visualizing public land usage, or exploring the outdoors, this project offers a fast, lightweight foundation for accessing and working with BLM campsite data.
+
+**Disclaimer:** Not all locations in this dataset are guaranteed to be valid or legal campsites. Best-effort filtering is applied to exclude irrelevant results (such as day-use areas and shooting ranges), but manual verification is always recommended before visiting.
 
 ---
 
@@ -13,7 +21,9 @@ Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a mo
 
 ## Features
 
-- **Automated spider**: Crawls and extracts BLM campsite data on a schedule or on demand.
+- **Clustered server architecture:** Leverages all CPU cores via Node.js clustering to maximize performance and handle high concurrency.
+- **High-performance:** Uses parallel fetching, persistent connections, and retry logic for fast, reliable crawling. In-memory filtering reduces noise, and geospatial enrichment is done offline for speed and privacy.
+- **Automated**: Crawls and extracts BLM campsite data on a schedule or on demand.
 - **Scheduled updates:** A GitHub Actions cron job runs the crawler biweekly to keep data fresh.
 - **REST API**: Query, filter, and update campsites via HTTP endpoints.
 - **JSON storage**: All data is stored in `data/blm-campsites.json`.
@@ -24,6 +34,13 @@ Scrape and serve Bureau of Land Management (BLM) dispersed campsite data as a mo
 ---
 
 ## How It Works
+
+- The API server uses Node.js clustering to take advantage of all available CPU cores. When you start the server, a primary process forks multiple worker processes (one per CPU core), each handling incoming HTTP requests. This improves performance and reliability under load, as requests are distributed across all cores and workers are automatically restarted if they crash.
+- The spider crawls the BLM website, parses each campsite detail page, and saves structured data to a JSON file.
+- A GitHub Actions cron job runs the spider automatically every week to keep data fresh.
+- The API reads from the generated JSON file and serves endpoints for querying and filtering campsite data.
+- Geospatial enrichment (state inference) is performed offline using Turf.js and a local GeoJSON file—no external API calls required.
+- The API supports filtering, pagination, and returns structured JSON responses.
 
 ```mermaid
 graph TB
@@ -40,7 +57,7 @@ graph TB
     K --> L[Save to JSON File<br/>data/blm-campsites.json]
     L --> M[Commit & Push to GitHub<br/>Updated data available]
     
-    N[API Server<br/>Express.js] --> O[Read JSON File<br/>Load campsite data]
+    N[API Server<br/>Express.js<br/>Clustered Workers] --> O[Read JSON File<br/>Load campsite data]
     O --> P[List Endpoint<br/>GET /api/v1/campsites]
     P --> Q[Filter & Paginate<br/>By state, limit, offset]
     Q --> R[Return JSON Response<br/>All campsites]
