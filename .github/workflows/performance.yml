@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/server
+        working-directory: src
     outputs:
       mean_latency: ${{ steps.extract-artillery.outputs.mean_latency }}
       p95_latency: ${{ steps.extract-artillery.outputs.p95_latency }}

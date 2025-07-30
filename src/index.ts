@@ -89,6 +89,10 @@ app.get('/api/v1/campsites/:id', (req: Request, res: Response, next: NextFunctio
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.get('/health', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
