@@ -44,8 +44,7 @@ app.get('/api/v1/campsites', (req, res, next) => {
             campsites = campsites.filter(site =>
                 Array.isArray(site.activities) &&
                 activityList.every(requested =>
-                    Array.isArray(site.activities) &&
-                    site.activities.some(activity =>
+                    site.activities?.some(activity =>
                         activity.trim().toLowerCase() === requested
                     )
                 )
