@@ -43,11 +43,10 @@ app.get('/api/v1/campsites', (req, res, next) => {
             const activityList = activities.split(',').map(a => a.trim().toLowerCase());
             campsites = campsites.filter(site =>
                 Array.isArray(site.activities) &&
-                activityList.every(requested =>
-                    site.activities?.some(activity =>
-                        activity.trim().toLowerCase() === requested
-                    )
-                )
+                activityList.every(requested => {
+                    const siteSet = new Set(site.activities?.map(a => a.trim().toLowerCase()));
+                    return siteSet.has(requested);
+                })
             );
         }
 
@@ -71,6 +70,7 @@ app.get('/api/v1/campsites', (req, res, next) => {
             campsites = campsites.slice(offset);
         }
 
+        res.set('Cache-Control', 'public, max-age=300');
         res.json(campsites);
     } catch (err) {
         next(err);
@@ -81,6 +81,7 @@ app.get('/api/v1/campsites/:id', (req, res, next) => {
     try {
         const site = loadCampsites().find(site => site.id === req.params.id);
         if (!site) return res.status(404).json({ error: 'Campsite not found' });
+        res.set('Cache-Control', 'public, max-age=300');
         res.json(site);
     } catch (err) {
         next(err);
