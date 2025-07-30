@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-COPY data/blm-campsites.json ./data/blm-campsites.json
+COPY data ./data
 
 RUN npm run build
 
