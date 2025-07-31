@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import { Spider } from './spider/spider';
 import { writeFileSync } from 'fs';
 
-async function runSpiderJob() {
+export async function runSpiderJob() {
   console.log('[CRON] Starting spider job...');
   const spider = new Spider('dispersed');
   const sites = await spider.crawl();

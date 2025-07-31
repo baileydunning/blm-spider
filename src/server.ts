@@ -108,3 +108,5 @@ export function startServer() {
         console.log(`Worker ${process.pid} listening on port ${PORT}`);
     });
 }
+
+export default app; 
