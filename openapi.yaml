@@ -3,7 +3,7 @@ info:
   title: BLM Spider API
   version: 1.0.0
   description: |
-    An API for exploring Bureau of Land Management (BLM) dispersed campsites across the U.S. This project combines a clustered Node.js server with a high-performance web crawler to extract and serve structured campsite data from the BLM website. Data is enriched with offline geospatial boundaries and made available through RESTful endpoints with support for filtering and pagination. The crawler is optimized for speed and reliability using parallel page fetching, persistent connections, and retry logic. Updates run automatically each week via a GitHub Actions cron job to keep data fresh.
+    An API for exploring Bureau of Land Management (BLM) dispersed campsites across the U.S. This project combines a Node.js server with a web crawler (spider) to extract and serve structured campsite data from the BLM website. Data is enriched with offline geospatial boundaries and made available through RESTful endpoints with support for filtering and pagination. The crawler is optimized for speed and reliability using parallel page fetching, persistent connections, and retry logic. Updates run automatically each week via a GitHub Actions cron job to keep data fresh.
     > *Disclaimer: Not all results are guaranteed to be valid campsites. Best-effort filters are applied, but users should verify site status with the BLM before visiting.*
 
     ### CORS Policy 
