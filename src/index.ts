@@ -10,7 +10,7 @@ import path from 'path';
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
-const app = express();
+export const app = express();
 const swaggerDocument = YAML.load(path.join(__dirname, '../openapi.yaml'));
 
 app.use(cors());
