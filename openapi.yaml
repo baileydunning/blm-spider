@@ -33,10 +33,11 @@ paths:
       tags: [ Campsites ]
       summary: Retrieve all campsites
       description: |
-        Returns a list of BLM campsites. Supports optional filtering by state and pagination.
+        Returns a list of BLM campsites. Supports optional filtering by state, activities, and pagination.
 
         **Usage notes:**
         - Filter by state using the `state` query parameter (case-insensitive, e.g. `state=Wyoming`)
+        - Filter by activities using the `activities` query parameter (comma-separated, e.g. `activities=camping,hiking`)
         - Use `limit` and `offset` for pagination
       parameters:
       - in: query
