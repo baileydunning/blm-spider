@@ -11,7 +11,7 @@ import { cleanText } from '../utils/cleanText';
 
 const BASE_URL = 'https://www.blm.gov';
 
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
   timeout: 10000,
   httpAgent: new (require('http').Agent)({ keepAlive: true }),
   httpsAgent: new (require('https').Agent)({ keepAlive: true }),
