@@ -1,37 +1,78 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import cluster from 'cluster';
-import os from 'os';
-import { startServer } from './server';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import request from 'supertest';
+import fs from 'fs';
+import path from 'path';
+import { app } from './index'; 
 
-vi.mock('./server', () => ({
-    startServer: vi.fn(),
-}));
+const mockDataPath = path.join(__dirname, '../data/blm-campsites.json');
+const mockCampsites = [
+  {
+    id: '123',
+    name: 'Mock Camp',
+    state: 'CO',
+    activities: ['Hiking', 'Camping'],
+    lat: 39.7392,
+    lng: -104.9903,
+    mapLink: 'https://example.com/map',
+    source: 'BLM'
+  }
+];
 
-describe('index.ts (clustering)', () => {
-    beforeEach(() => {
-        vi.resetModules();
-    });
+beforeAll(() => {
+  fs.writeFileSync(mockDataPath, JSON.stringify(mockCampsites, null, 2));
+});
 
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
+afterAll(() => {
+  fs.writeFileSync(mockDataPath, JSON.stringify([], null, 2));
+});
 
-    it('should fork workers if primary', async () => {
-        vi.spyOn(cluster, 'isPrimary', 'get').mockReturnValue(true);
-        const forkSpy = vi.spyOn(cluster, 'fork').mockImplementation(() => ({} as any));
-        const onSpy = vi.spyOn(cluster, 'on').mockImplementation(() => cluster as any);
+describe('Campsite API', () => {
+  it('GET /health returns ok', async () => {
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+  });
 
-        await import('./index');
+  it('GET /api/v1/campsites returns all campsites', async () => {
+    const res = await request(app).get('/api/v1/campsites');
+    expect(res.status).toBe(200);
+    expect(res.body).toBeInstanceOf(Array);
+    expect(res.body.length).toBeGreaterThan(0);
+  });
 
-        expect(forkSpy).toHaveBeenCalledTimes(os.cpus().length);
-        expect(onSpy).toHaveBeenCalledWith('exit', expect.any(Function));
-    });
+  it('GET /api/v1/campsites with state filter', async () => {
+    const res = await request(app).get('/api/v1/campsites?state=co');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].state).toBe('CO');
+  });
 
-    it('should start server if worker', async () => {
-        vi.spyOn(cluster, 'isPrimary', 'get').mockReturnValue(false);
+  it('GET /api/v1/campsites with activity filter', async () => {
+    const res = await request(app).get('/api/v1/campsites?activities=camping');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBe(1);
+  });
 
-        await import('./index');
+  it('GET /api/v1/campsites/:id with valid ID', async () => {
+    const res = await request(app).get('/api/v1/campsites/123');
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe('123');
+  });
 
-        expect(startServer).toHaveBeenCalled();
-    });
+  it('GET /api/v1/campsites/:id with invalid ID returns 404', async () => {
+    const res = await request(app).get('/api/v1/campsites/bad-id');
+    expect(res.status).toBe(404);
+  });
+
+  it('GET /api/v1/campsites with invalid limit returns 400', async () => {
+    const res = await request(app).get('/api/v1/campsites?limit=zero');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/invalid/i);
+  });
+
+  it('GET unknown route returns 404', async () => {
+    const res = await request(app).get('/not-a-real-route');
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/not found/i);
+  });
 });
