@@ -57,9 +57,7 @@ jobs:
 
       - name: Run Artillery load test
         id: artillery-run
-        run: |
-          printf 'config:\n  target: "http://localhost:8080"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
-          artillery run --output artillery-report.json artillery.yml
+        run: artillery run --output artillery-report.json artillery.yml
       
       - name: Print Artillery report JSON
         run: cat artillery-report.json
