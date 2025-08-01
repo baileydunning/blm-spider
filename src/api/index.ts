@@ -10,7 +10,6 @@ import campsiteRoutes from './routes/campsites';
 import healthRoutes from './routes/health';
 import notFound from './middleware/notFound';
 import errorHandler from './middleware/errorHandler';
-import tooManyRequests from './middleware/tooManyRequests';
 
 dotenv.config();
 export const app = express();
@@ -34,7 +33,6 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(notFound);
 app.use(errorHandler);
-app.use(tooManyRequests);
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
