@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
+import compression from 'compression';
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
@@ -14,6 +15,7 @@ export const app = express();
 const swaggerDocument = YAML.load(path.join(__dirname, '../openapi.yaml'));
 
 app.use(cors());
+app.use(compression());
 app.use(express.json());
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
