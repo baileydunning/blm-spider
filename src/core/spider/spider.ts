@@ -1,34 +1,15 @@
-import axios from 'axios';
 import { load } from 'cheerio';
-import { parseSearchPage } from './parseSearchPage';
-import { parseDetailPage } from './parseDetailPage';
-import { Campsite } from '../types';
-import { excludePlaces } from '../utils/excludePlaces';
+import { parseSearchPage } from './utils/parseSearchPage';
+import { parseDetailPage } from './utils/parseDetailPage';
+import { Campsite, CampsiteImage } from '../types/index';
+import { excludePlaces } from './utils/excludePlaces';
 import { v4 as uuidv4 } from 'uuid';
 import pLimit from 'p-limit';
-import { getStateFromCoordinates } from '../utils/getStateFromCoordinates';
-import { cleanText } from '../utils/cleanText';
+import { getStateFromCoordinates } from '../loaders/getStateFromCoordinates';
+import { cleanText } from './utils/cleanText';
+import { fetchWithRetry } from './utils/httpRequest';
 
 const BASE_URL = 'https://www.blm.gov';
-
-export const axiosInstance = axios.create({
-  timeout: 10000,
-  httpAgent: new (require('http').Agent)({ keepAlive: true }),
-  httpsAgent: new (require('https').Agent)({ keepAlive: true }),
-});
-
-async function fetchWithRetry(url: string, retries = 2): Promise<string> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const response = await axiosInstance.get(url);
-      return response.data;
-    } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise((res) => setTimeout(res, 1000 * (attempt + 1)));
-    }
-  }
-  throw new Error('Failed to fetch after retries');
-}
 
 export class Spider {
   private startUrl: string;
@@ -123,7 +104,6 @@ export class Spider {
 
           const duration = performance.now() - start;
 
-          // Track timing stats
           stats.detailsFetched++;
           stats.durations.avg += duration;
           stats.durations.min = Math.min(stats.durations.min, duration);
@@ -158,7 +138,7 @@ export class Spider {
             wildlife: site.wildlife,
             fees: site.fees && cleanText(site.fees),
             stayLimit: site.stayLimit && cleanText(site.stayLimit),
-            images: site.images?.map((img) => ({
+            images: site.images?.map((img: CampsiteImage) => ({
               src: img.src,
               alt: img.alt ? cleanText(img.alt) : undefined,
               credit: img.credit ? cleanText(img.credit) : undefined,
