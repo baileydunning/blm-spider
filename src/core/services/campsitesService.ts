@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Readable } from 'stream';
+import path from 'path';
 import { loadCampsites } from '../loaders/loadCampsites';
 
 export function getCampsites(req: Request, res: Response, next: NextFunction) {
@@ -17,7 +18,7 @@ export function getCampsites(req: Request, res: Response, next: NextFunction) {
       campsites = campsites.filter(site =>
         Array.isArray(site.activities) &&
         activityList.every(requested => {
-          const siteSet = new Set(site.activities.map(a => a.trim().toLowerCase()));
+          const siteSet = new Set(site.activities?.map(a => a.trim().toLowerCase()));
           return siteSet.has(requested);
         })
       );

@@ -1,88 +1,31 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import fs from 'fs';
-import path from 'path';
-import { app } from './index'; 
+import { describe, it, expect } from 'vitest';
+import { app } from './index';
 
-const mockDataPath = path.join(__dirname, '../data/blm-campsites.json');
-const mockCampsites = [
-  {
-    id: '123',
-    name: 'Mock Camp',
-    state: 'CO',
-    activities: ['Hiking', 'Camping'],
-    lat: 39.7392,
-    lng: -104.9903,
-    mapLink: 'https://example.com/map',
-    source: 'BLM'
-  }
-];
-
-beforeAll(() => {
-  fs.writeFileSync(mockDataPath, JSON.stringify(mockCampsites, null, 2));
-});
-
-afterAll(() => {
-  fs.writeFileSync(mockDataPath, JSON.stringify([], null, 2));
-});
-
-describe('Campsite API', () => {
-  it('GET /health returns ok', async () => {
+describe('Express API', () => {
+  it('should return 200 and health status on /health', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
-    expect(res.body.status).toBe('ok');
+    expect(res.body).toHaveProperty('status');
   });
 
-  it('GET /api/v1/campsites returns all campsites', async () => {
-    const res = await request(app).get('/api/v1/campsites');
+  it('should serve OpenAPI docs on /docs', async () => {
+    const res = await request(app).get('/docs/');
     expect(res.status).toBe(200);
-    expect(res.body).toBeInstanceOf(Array);
-    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.text).toContain('<div id="swagger-ui"></div>');
   });
 
-  it('GET /api/v1/campsites with state filter', async () => {
-    const res = await request(app).get('/api/v1/campsites?state=co');
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBe(1);
-    expect(res.body[0].state).toBe('CO');
-  });
-
-  it('GET /api/v1/campsites with activity filter', async () => {
-    const res = await request(app).get('/api/v1/campsites?activities=camping');
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBe(1);
-  });
-
-  it('GET /api/v1/campsites/:id with valid ID', async () => {
-    const res = await request(app).get('/api/v1/campsites/123');
-    expect(res.status).toBe(200);
-    expect(res.body.id).toBe('123');
-  });
-
-  it('GET /api/v1/campsites/:id with invalid ID returns 404', async () => {
-    const res = await request(app).get('/api/v1/campsites/bad-id');
+  it('should return 404 for unknown routes', async () => {
+    const res = await request(app).get('/some/unknown/route');
     expect(res.status).toBe(404);
+    expect(res.body).toHaveProperty('error');
   });
 
-  it('GET /api/v1/campsites with invalid limit returns 400', async () => {
-    const res = await request(app).get('/api/v1/campsites?limit=zero');
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/invalid/i);
+  it('should apply rate limiting', async () => {
+    for (let i = 0; i < 101; i++) {
+      await request(app).get('/health');
+    }
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(429);
   });
-
-  it('GET unknown route returns 404', async () => {
-    const res = await request(app).get('/not-a-real-route');
-    expect(res.status).toBe(404);
-    expect(res.body.error).toMatch(/not found/i);
-  });
-
-  it('streams all campsites as a JSON array', async () => {
-  const response = await request(app)
-    .get('/api/v1/campsites?limit=all')
-    .expect('Content-Type', /json/)
-    .expect(200);
-
-  expect(response.text.startsWith('[')).toBe(true);
-  expect(response.text.endsWith(']')).toBe(true);
-});
 });

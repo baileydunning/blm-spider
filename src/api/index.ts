@@ -13,7 +13,7 @@ import errorHandler from './middleware/errorHandler';
 import tooManyRequests from './middleware/tooManyRequests';
 
 dotenv.config();
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 8080;
 
 const swaggerDocument = YAML.load(path.join(__dirname, './docs/openapi.yaml'));

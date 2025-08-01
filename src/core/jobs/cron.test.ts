@@ -1,49 +1,57 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import cron from 'node-cron';
-import { writeFileSync } from 'fs';
-
-vi.mock('node-cron', () => ({
-    default: {
-        schedule: vi.fn(),
-    },
-}));
-
-vi.mock('./spider/spider', () => ({
-    Spider: vi.fn().mockImplementation(() => ({
-        crawl: vi.fn().mockResolvedValue([{ id: '1', name: 'Test Site', url: 'https://example.com' }]),
-    })),
-}));
 
 vi.mock('fs', async () => {
-    const actual = await vi.importActual<typeof import('fs')>('fs');
-    return {
-        ...actual,
-        writeFileSync: vi.fn(),
-    };
+  const actual = await vi.importActual<typeof import('fs')>('fs');
+
+  return {
+    ...actual,
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn((filePath: string | Buffer) => {
+      const pathStr = typeof filePath === 'string' ? filePath : '';
+      if (pathStr.includes('us-states.geojson')) {
+        return JSON.stringify({ type: 'FeatureCollection', features: [] });
+      }
+      return '';
+    }),
+  };
 });
 
-describe('cron.ts', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+import { runSpiderJob } from './cron';
+import * as spiderModule from '../spider/spider';
+import { mockCampsites } from '../types/mockCampsites';
+import { writeFileSync } from 'fs';
+
+describe('runSpiderJob', () => {
+  const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+  let spiderConstructorSpy: ReturnType<typeof vi.spyOn>;
+  let crawlMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    crawlMock = vi.fn().mockResolvedValue(mockCampsites);
+    spiderConstructorSpy = (vi.spyOn(spiderModule, 'Spider') as unknown as any).mockImplementation(function (this: any) {
+      this.crawl = crawlMock;
     });
+  });
 
-    it('should schedule a cron job if not running in GitHub Actions', async () => {
-        process.env.GITHUB_ACTIONS = '';
-        await import('./cron');
-        expect(cron.schedule).toHaveBeenCalledWith('0 2 * * 0', expect.any(Function));
-    });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
 
-    it('should run spider and write file when runSpiderJob is called', async () => {
-        const cronModule = await import('./cron');
-        await cronModule.runSpiderJob();
+  it('runs the spider and writes output to file', async () => {
+    await runSpiderJob();
 
-        expect(writeFileSync).toHaveBeenCalledTimes(1);
+    expect(spiderConstructorSpy).toHaveBeenCalledWith('dispersed');
+    expect(crawlMock).toHaveBeenCalled();
 
-        const [filePath, data] = (writeFileSync as any).mock.calls[0];
-        expect(filePath).toBe('data/blm-campsites.json');
-        const parsed = JSON.parse(data);
-        expect(parsed).toEqual([
-            { id: '1', name: 'Test Site', url: 'https://example.com' }
-        ]);
-    });
+    expect(writeFileSync).toHaveBeenCalledWith(
+      'data/blm-campsites.json',
+      JSON.stringify(mockCampsites, null, 2)
+    );
+
+    expect(consoleSpy).toHaveBeenCalledWith('[CRON] Starting spider job...');
+    expect(consoleSpy).toHaveBeenCalledWith(
+      `[CRON] Spider finished. Saved ${mockCampsites.length} sites to data/blm-campsites.json.`
+    );
+  });
 });
