@@ -2,11 +2,12 @@
   "name": "blm-spider",
   "version": "1.0.0",
   "description": "Scrape BLM dispersed campsite data by crawling their official site (starting at search results), parsing each campsite detail page, and saving structured data to JSON.",
-  "main": "dist/index.js",
+  "main": "dist/api/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "nodemon --watch src --exec ts-node src/index.ts",
+    "start": "node dist/api/index.js",
+    "cron": "node dist/core/jobs/cron.js",
+    "dev": "nodemon --watch src --exec ts-node src/api/index.ts",
     "test": "vitest"
   },
   "keywords": [],
