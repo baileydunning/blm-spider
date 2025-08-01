@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Readable } from 'stream';
-import { loadCampsites } from '../loaders/loadCampsites';
+import { loadCampsites } from '../../core/loaders/loadCampsites';
 import path from 'path';
 
 export function getCampsites(req: Request, res: Response, next: NextFunction) {

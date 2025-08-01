@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCampsites, getCampsiteById } from '../../core/services/campsitesService';
+import { getCampsites, getCampsiteById } from '../services/campsitesService';
 
 const router = Router();
 

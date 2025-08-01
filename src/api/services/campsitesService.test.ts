@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getCampsites } from './campsitesService';
-import { mockCampsites } from '../types/mockCampsites';
-import * as loaders from '../loaders/loadCampsites';
+import { mockCampsites } from '../../core/types/mockCampsites';
+import * as loaders from '../../core/loaders/loadCampsites';
 import { Writable } from 'stream';
 import path from 'path';
 import type { Response, Request } from 'express';
