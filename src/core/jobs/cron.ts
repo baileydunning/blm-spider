@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { Spider } from './spider/spider';
+import { Spider } from '../spider/spider';
 import { writeFileSync } from 'fs';
 
 export async function runSpiderJob() {
