@@ -100,7 +100,6 @@ app.get('/api/v1/campsites', (req, res, next) => {
         if (i < campsites.length) {
           const campsite = JSON.stringify(campsites[i]);
           this.push(i > 0 ? ',' + campsite : campsite);
-          if (i % 100 === 0) console.log(`Streamed ${i + 1} of ${campsites.length}`);
           i++;
           setImmediate(() => this.read());
         } else {
