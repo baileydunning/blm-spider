@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import cron from 'node-cron';
-import { Spider } from './spider/spider';
 import { writeFileSync } from 'fs';
 
 vi.mock('node-cron', () => ({

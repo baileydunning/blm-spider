@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: Run spider and update JSON
-        run: npx ts-node src/cron.ts
+        run: npx ts-node src/core/jobs/cron.ts
       
       - name: Validate scraped JSON
         run: |
