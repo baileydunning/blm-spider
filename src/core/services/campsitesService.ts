@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Readable } from 'stream';
-import path from 'path';
 import { loadCampsites } from '../loaders/loadCampsites';
-
-const MAX_LIMIT = 1000;
-const DEFAULT_LIMIT = 100;
+import path from 'path';
 
 export function getCampsites(req: Request, res: Response, next: NextFunction) {
   try {
@@ -40,7 +37,7 @@ export function getCampsites(req: Request, res: Response, next: NextFunction) {
 
     const rawLimit = req.query.limit as string;
     const rawOffset = req.query.offset as string;
-    const offset = rawOffset ? parseInt(rawOffset, 10) : 0;
+    const offset = parseInt(rawOffset, 10) || 0;
 
     if (rawLimit === 'all') {
       res.setHeader('Content-Type', 'application/json');
@@ -48,17 +45,19 @@ export function getCampsites(req: Request, res: Response, next: NextFunction) {
       return res.sendFile(path.join(__dirname, '../../../data/blm-campsites.json'));
     }
 
-    const limit = rawLimit ? parseInt(rawLimit, 10) : DEFAULT_LIMIT;
+    const limit = parseInt(rawLimit, 10);
 
-    if (rawLimit && (isNaN(limit) || limit < 1 || limit > MAX_LIMIT)) {
-      return res.status(400).json({ error: `"limit" must be a number between 1 and ${MAX_LIMIT} or "all"` });
+    if (rawLimit && (isNaN(limit) || limit < 1)) {
+      return res.status(400).json({ error: 'Invalid "limit" parameter' });
     }
-
+    
     if (rawOffset && (isNaN(offset) || offset < 0)) {
-      return res.status(400).json({ error: '"offset" must be a non-negative integer' });
+      return res.status(400).json({ error: 'Invalid "offset" parameter' });
     }
 
-    const sliced = campsites.slice(offset, offset + limit);
+    const appliedLimit = isNaN(limit) ? 100 : limit;
+    const sliced = campsites.slice(offset, offset + appliedLimit);
+
     let i = 0;
     const stream = new Readable({
       read() {
@@ -79,27 +78,17 @@ export function getCampsites(req: Request, res: Response, next: NextFunction) {
     res.setHeader('Cache-Control', 'public, max-age=300');
     stream.pipe(res);
   } catch (err) {
-    console.error('Error in getCampsites:', err);
     next(err);
   }
 }
 
 export function getCampsiteById(req: Request, res: Response, next: NextFunction) {
   try {
-    const id = req.params.id;
-    if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'Invalid or missing "id" parameter' });
-    }
-
-    const campsite = loadCampsites().find(site => site.id === id);
-    if (!campsite) {
-      return res.status(404).json({ error: 'Campsite not found' });
-    }
-
+    const campsite = loadCampsites().find(site => site.id === req.params.id);
+    if (!campsite) return res.status(404).json({ error: 'Campsite not found' });
     res.setHeader('Cache-Control', 'public, max-age=300');
     res.json(campsite);
   } catch (err) {
-    console.error('Error in getCampsiteById:', err);
     next(err);
   }
 }
