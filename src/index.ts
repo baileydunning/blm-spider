@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
 import compression from 'compression';
+import { Readable } from 'stream';
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
@@ -22,18 +23,18 @@ app.use(compression({
 app.use(cors());
 app.use(express.json());
 app.use(rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    standardHeaders: true,
-    legacyHeaders: false,
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
 }));
 
 let cachedCampsites: Campsite[] = [];
 const dataPath = path.join(__dirname, '../data/blm-campsites.json');
 function loadCampsites(): Campsite[] {
-    if (cachedCampsites.length) return cachedCampsites;
-    cachedCampsites = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
-    return cachedCampsites;
+  if (cachedCampsites.length) return cachedCampsites;
+  cachedCampsites = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+  return cachedCampsites;
 }
 
 app.get('/api/v1/campsites', (req, res, next) => {
@@ -62,12 +63,23 @@ app.get('/api/v1/campsites', (req, res, next) => {
     const offset = parseInt(rawOffset, 10) || 0;
 
     if (rawLimit === 'all') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      const fileStream = fs.createReadStream(dataPath);
+      fileStream.on('error', err => {
+        console.error('File stream error:', err);
+        next(err);
+      });
+      fileStream.pipe(res);
+      return;
     } else {
       const limit = parseInt(rawLimit, 10);
       if (rawLimit && (isNaN(limit) || limit < 1)) {
+        console.warn(`Invalid limit param: "${rawLimit}"`);
         return res.status(400).json({ error: 'Invalid "limit" parameter' });
       }
       if (rawOffset && (isNaN(offset) || offset < 0)) {
+        console.warn(`Invalid offset param: "${rawOffset}"`);
         return res.status(400).json({ error: 'Invalid "offset" parameter' });
       }
 
@@ -75,39 +87,63 @@ app.get('/api/v1/campsites', (req, res, next) => {
       campsites = campsites.slice(offset, offset + appliedLimit);
     }
 
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'public, max-age=300');
+
+    let i = 0;
+    const readable = new Readable({
+      read() {
+        if (i === 0) {
+          this.push('[');
+        }
+
+        if (i < campsites.length) {
+          const campsite = JSON.stringify(campsites[i]);
+          this.push(i > 0 ? ',' + campsite : campsite);
+          if (i % 100 === 0) console.log(`Streamed ${i + 1} of ${campsites.length}`);
+          i++;
+          setImmediate(() => this.read());
+        } else {
+          this.push(']');
+          this.push(null);
+        }
+      }
+    });
+
+    readable.pipe(res);
+  } catch (err) {
+    console.error('Streaming error:', err);
+    next(err);
+  }
+});
+
+
+app.get('/api/v1/campsites/:id', (req, res, next) => {
+  try {
+    const site = loadCampsites().find(site => site.id === req.params.id);
+    if (!site) return res.status(404).json({ error: 'Campsite not found' });
     res.set('Cache-Control', 'public, max-age=300');
-    res.json(campsites);
+    res.json(site);
   } catch (err) {
     next(err);
   }
 });
 
-app.get('/api/v1/campsites/:id', (req, res, next) => {
-    try {
-        const site = loadCampsites().find(site => site.id === req.params.id);
-        if (!site) return res.status(404).json({ error: 'Campsite not found' });
-        res.set('Cache-Control', 'public, max-age=300');
-        res.json(site);
-    } catch (err) {
-        next(err);
-    }
-});
-
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.use((_req, res) => {
-    res.status(404).json({ error: 'Endpoint not found' });
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(err.stack);
-    res.status(500).json({ error: err.message || 'Internal server error' });
+  console.error(err.stack);
+  res.status(500).json({ error: err.message || 'Internal server error' });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });

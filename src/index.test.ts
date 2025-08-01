@@ -75,4 +75,14 @@ describe('Campsite API', () => {
     expect(res.status).toBe(404);
     expect(res.body.error).toMatch(/not found/i);
   });
+
+  it('streams all campsites as a JSON array', async () => {
+  const response = await request(app)
+    .get('/api/v1/campsites?limit=all')
+    .expect('Content-Type', /json/)
+    .expect(200);
+
+  expect(response.text.startsWith('[')).toBe(true);
+  expect(response.text.endsWith(']')).toBe(true);
+});
 });
