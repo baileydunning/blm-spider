@@ -7,11 +7,17 @@ import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
+import compression from 'compression';
 
 dotenv.config();
 const PORT = process.env.PORT || 8080;
 export const app = express();
 const swaggerDocument = YAML.load(path.join(__dirname, '../openapi.yaml'));
+
+app.use(compression({
+  level: 9,
+  threshold: 0,
+}));
 
 app.use(cors());
 app.use(express.json());
@@ -31,50 +37,49 @@ function loadCampsites(): Campsite[] {
 }
 
 app.get('/api/v1/campsites', (req, res, next) => {
-    try {
-        let campsites = loadCampsites();
-        const state = (req.query.state as string)?.toLowerCase();
-        if (state) {
-            campsites = campsites.filter(site => site.state?.toLowerCase() === state);
-        }
+  try {
+    let campsites = loadCampsites();
 
-        const activities = (req.query.activities as string);
-        if (activities) {
-            const activityList = activities.split(',').map(a => a.trim().toLowerCase());
-            campsites = campsites.filter(site =>
-                Array.isArray(site.activities) &&
-                activityList.every(requested => {
-                    const siteSet = new Set(site.activities?.map(a => a.trim().toLowerCase()));
-                    return siteSet.has(requested);
-                })
-            );
-        }
-
-        const limit = parseInt(req.query.limit as string, 10);
-        const offset = parseInt(req.query.offset as string, 10);
-
-        if (req.query.limit && (isNaN(limit) || limit < 1)) {
-            return res.status(400).json({ error: 'Invalid "limit" parameter' });
-        }
-
-        if (req.query.offset && (isNaN(offset) || offset < 0)) {
-            return res.status(400).json({ error: 'Invalid "offset" parameter' });
-        }
-
-        const hasLimit = !isNaN(limit);
-        const hasOffset = !isNaN(offset);
-
-        if (hasLimit) {
-            campsites = campsites.slice(hasOffset ? offset : 0, (hasOffset ? offset : 0) + limit);
-        } else if (hasOffset) {
-            campsites = campsites.slice(offset);
-        }
-
-        res.set('Cache-Control', 'public, max-age=300');
-        res.json(campsites);
-    } catch (err) {
-        next(err);
+    const state = (req.query.state as string)?.toLowerCase();
+    if (state) {
+      campsites = campsites.filter(site => site.state?.toLowerCase() === state);
     }
+
+    const activities = (req.query.activities as string);
+    if (activities) {
+      const activityList = activities.split(',').map(a => a.trim().toLowerCase());
+      campsites = campsites.filter(site =>
+        Array.isArray(site.activities) &&
+        activityList.every(requested => {
+          const siteSet = new Set(site.activities?.map(a => a.trim().toLowerCase()));
+          return siteSet.has(requested);
+        })
+      );
+    }
+
+    const rawLimit = req.query.limit as string;
+    const rawOffset = req.query.offset as string;
+    const offset = parseInt(rawOffset, 10) || 0;
+
+    if (rawLimit === 'all') {
+    } else {
+      const limit = parseInt(rawLimit, 10);
+      if (rawLimit && (isNaN(limit) || limit < 1)) {
+        return res.status(400).json({ error: 'Invalid "limit" parameter' });
+      }
+      if (rawOffset && (isNaN(offset) || offset < 0)) {
+        return res.status(400).json({ error: 'Invalid "offset" parameter' });
+      }
+
+      const appliedLimit = isNaN(limit) ? 100 : limit;
+      campsites = campsites.slice(offset, offset + appliedLimit);
+    }
+
+    res.set('Cache-Control', 'public, max-age=300');
+    res.json(campsites);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/api/v1/campsites/:id', (req, res, next) => {
