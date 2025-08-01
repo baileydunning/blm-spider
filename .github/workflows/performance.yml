@@ -129,14 +129,14 @@ jobs:
 
           response_size_status() {
             local size=$1
-            if (( $(echo "$size < 2000" | bc -l) )); then
-              echo "Excellent"
-            elif (( $(echo "$size < 5000" | bc -l) )); then
-              echo "Acceptable"
-            elif (( $(echo "$size < 10000" | bc -l) )); then
-              echo "Large"
+            if (( $(echo "$size < 20000" | bc -l) )); then
+              echo "Excellent"      # < 20 KB
+            elif (( $(echo "$size < 100000" | bc -l) )); then
+              echo "Acceptable"     # 20–100 KB
+            elif (( $(echo "$size < 500000" | bc -l) )); then
+              echo "Large"          # 100–500 KB
             else
-              echo "Excessive"
+              echo "Excessive"      # > 500 KB
             fi
           }
 
