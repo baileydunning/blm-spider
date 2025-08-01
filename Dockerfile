@@ -10,8 +10,6 @@ COPY data ./data
 
 RUN npm run build
 
-COPY src/api/docs/openapi.yaml dist/api/docs/openapi.yaml
-
 ENV NODE_ENV=production
 ENV PORT=8080
 

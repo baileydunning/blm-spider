@@ -5,6 +5,7 @@
   "main": "dist/api/index.js",
   "scripts": {
     "build": "tsc",
+    "postbuild": "mkdir -p dist/api/docs && cp src/api/docs/openapi.yaml dist/api/docs/openapi.yaml",
     "start": "node dist/api/index.js",
     "cron": "node dist/core/jobs/cron.js",
     "dev": "nodemon --watch src --exec ts-node src/api/index.ts",
