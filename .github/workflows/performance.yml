@@ -61,6 +61,9 @@ jobs:
         run: |
           printf 'config:\n  target: "http://localhost:8080"\n  phases:\n    - duration: 10\n      arrivalRate: 10\nscenarios:\n  - flow:\n      - get:\n          url: "/api/v1/campsites"\n' > artillery.yml
           artillery run --output artillery-report.json artillery.yml
+      
+      - name: Print Artillery report JSON
+        run: cat artillery-report.json
 
       - name: Extract latency metrics from Artillery report
         id: extract-artillery
@@ -72,7 +75,7 @@ jobs:
           p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
           max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
           response_size=$(jq -r '.aggregate["summaries"]["http.response_size"].mean // empty' artillery-report.json)
-          requests_per_second=$(jq -r '.aggregate.rates["http.requests"] // empty' artillery-report.json)
+          requests_per_second=$(jq -r '.aggregate["rates"]["http.requests"] // empty' artillery-report.json)
           total_requests=$(jq -r '.aggregate["counters"]["http.requests"] // 0' artillery-report.json)
           errors=$(jq -r '.aggregate["counters"]["http.requests_failed"] // 0' artillery-report.json)
           if [ "$total_requests" -gt 0 ]; then
