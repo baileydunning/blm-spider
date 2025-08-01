@@ -130,21 +130,16 @@ jobs:
           }
 
           response_size_status() {
-            if (( response_size < 2000 )); then
-              response_size_status="Excellent"
-            elif (( response_size < 5000 )); then
-              response_size_status="Acceptable"
-            elif (( response_size < 10000 )); then
-              response_size_status="Large"
+            local size=$1
+            if (( $(echo "$size < 2000" | bc -l) )); then
+              echo "Excellent"
+            elif (( $(echo "$size < 5000" | bc -l) )); then
+              echo "Acceptable"
+            elif (( $(echo "$size < 10000" | bc -l) )); then
+              echo "Large"
             else
-              response_size_status="Excessive"
+              echo "Excessive"
             fi
-          }
-
-          rps_status() {
-            if (( $(echo "$rps >= 20" | bc -l) )); then echo "Excellent";
-            elif (( $(echo "$rps >= 10" | bc -l) )); then echo "Good";
-            else echo "Low"; fi
           }
 
           rate_status() {
@@ -162,7 +157,6 @@ jobs:
           echo "response_size_status=$(response_size_status $response_size)" >> $GITHUB_OUTPUT
           echo "requests_status=$(requests_status)" >> $GITHUB_OUTPUT
           echo "errors_status=$(errors_status)" >> $GITHUB_OUTPUT
-          echo "rps_status=$(rps_status)" >> $GITHUB_OUTPUT
           echo "error_rate_status=$(rate_status)" >> $GITHUB_OUTPUT
 
       - name: Post or update PR comment with backend results
