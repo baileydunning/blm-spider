@@ -72,7 +72,7 @@ jobs:
           p99_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].p99 // empty' artillery-report.json)
           max_latency=$(jq -r '.aggregate["summaries"]["http.response_time"].max // empty' artillery-report.json)
           response_size=$(jq -r '.aggregate["summaries"]["http.response_size"].mean // empty' artillery-report.json)
-          requests_per_second=$(jq -r '.aggregate["rates"]["http.requests"] // empty' artillery-report.json)
+          requests_per_second=$(jq -r '.aggregate.rates["http.requests"] // empty' artillery-report.json)
           total_requests=$(jq -r '.aggregate["counters"]["http.requests"] // 0' artillery-report.json)
           errors=$(jq -r '.aggregate["counters"]["http.requests_failed"] // 0' artillery-report.json)
           if [ "$total_requests" -gt 0 ]; then
