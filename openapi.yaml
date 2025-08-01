@@ -39,7 +39,8 @@ paths:
         **Usage notes:**
         - Use `state` to filter by U.S. state (case-insensitive, e.g. `state=Wyoming`)
         - Use `activities` to filter by comma-separated activities (e.g. `activities=camping,hiking`)
-        - Use `limit` and `offset` for pagination
+        - Use `limit` and `offset` for pagination. Limit defaults to **100** results if not specified.
+        - Use `limit=all` to return the full dataset
       parameters:
       - in: query
         name: state
@@ -56,7 +57,10 @@ paths:
         schema:
           type: integer
           minimum: 1
-        description: Maximum number of results to return
+        description: |
+          Maximum number of results to return. 
+          Defaults to **100** if not specified.
+          Use `limit=all` to return the full dataset
       - in: query
         name: offset
         schema:
