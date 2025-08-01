@@ -1,12 +1,12 @@
 # BLM Spider
 
-This project provides a high-performance API for discovering Bureau of Land Management (BLM) campsites across the United States. It combines a custom spider, scheduled automation, and a Node.js server to deliver reliable, structured campsite data via the /campsites and /campsites/{id} endpoints. A GitHub Actions workflow runs the spider automatically each week, ensuring that the data remains current.
+This project provides an API for discovering Bureau of Land Management (BLM) campsites across the United States. It combines a custom spider, scheduled automation, and a Node.js server to deliver location data via the /campsites and /campsites/{id} endpoints. A GitHub Actions workflow runs the spider automatically each week, ensuring that the data remains current.
 
-The spider regularly scans the BLM website, extracts and filters campsite detail pages, and saves the results to a structured JSON dataset. It’s optimized for resilience and speed using parallel fetching, persistent connections, retry logic, and efficient in-memory exclusion rules. Geospatial enrichment is performed entirely offline—inferring U.S. state boundaries from coordinates using Turf.js and a local GeoJSON file.
+The spider regularly scans the BLM website, extracts and filters campsite detail pages, and saves the results to a structured JSON dataset. It’s optimized using parallel fetching, persistent connections, retry logic, and in-memory exclusion rules. Geospatial enrichment is performed entirely offline—inferring U.S. state boundaries from coordinates using Turf.js and a local GeoJSON file.
 
 Whether you're building a camping app, visualizing public land usage, or exploring the outdoors, this project offers a fast, lightweight foundation for accessing and working with BLM campsite data.
 
-**Disclaimer:** Not all locations in this dataset are guaranteed to be valid or legal campsites. Best-effort filtering is applied to exclude irrelevant results (such as day-use areas and shooting ranges), but manual verification is always recommended before visiting.
+**Disclaimer:** This dataset is generated through automated scraping and filtering. While best efforts are made to exclude non-campsites (e.g., day-use areas, shooting ranges), accuracy is not guaranteed. Always confirm a site’s legal status and accessibility with the BLM before visiting.
 
 ---
 
@@ -142,7 +142,7 @@ Retrieve all campsites, with optional filtering and pagination.
 
 **Example:**
 ```
-GET /api/v1/campsites?state=Colorado&limit=10&offset=0
+GET /api/v1/campsites?state=Colorado&activities=camping&limit=10&offset=0
 ```
 
 **Response:**
