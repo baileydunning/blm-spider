@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Spider, axiosInstance } from './spider';
-import * as parseSearchModule from './parseSearchPage';
-import * as parseDetailModule from './parseDetailPage';
-import * as excludePlacesModule from '../utils/excludePlaces';
-import * as stateUtils from '../utils/getStateFromCoordinates';
-import * as uuid from 'uuid';
+import { Spider } from './spider';
+import { axiosInstance } from './utils/httpRequest';
+import * as parseSearchModule from './utils/parseSearchPage';
+import * as parseDetailModule from './utils/parseDetailPage';
+import * as excludePlacesModule from './utils/excludePlaces';
+import * as stateUtils from '../loaders/getStateFromCoordinates';
 
 vi.mock('uuid', async () => ({
   ...((await vi.importActual('uuid')) as any),
@@ -32,6 +32,7 @@ describe('Spider', () => {
       .mockReturnValueOnce([]);
 
     vi.spyOn(parseDetailModule, 'parseDetailPage').mockResolvedValue({
+      id: 'mock-id',
       name: 'Mock Site',
       description: 'A wonderful place.',
       lat: 39.7392,

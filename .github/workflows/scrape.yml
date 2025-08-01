@@ -22,7 +22,14 @@ jobs:
         run: npm ci
 
       - name: Run spider and update JSON
-        run: npx ts-node src/cron.ts
+        run: npx ts-node src/core/jobs/cron.ts
+      
+      - name: Validate scraped JSON
+        run: |
+          if ! jq -e '. | length > 0' data/blm-campsites.json; then
+            echo "Scraped data is empty or invalid. Aborting commit."
+            exit 1
+          fi
 
       - name: Commit and push JSON data
         env:

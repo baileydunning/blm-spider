@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { load } from 'cheerio';
-import { Campsite, CampsiteImage } from '../types';
+import { Campsite, CampsiteImage } from '../../types/index';
 
 export async function parseDetailPage(url: string): Promise<Partial<Campsite> | null> {
   try {
