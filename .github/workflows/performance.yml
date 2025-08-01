@@ -111,7 +111,7 @@ jobs:
 
           latency_status() {
             local val=$1
-            if (( $(echo "$val < 100" | bc -l) )); then echo "Outstanding";
+            if (( $(echo "$val < 100" | bc -l) )); then echo "Excellent";
             elif (( $(echo "$val < 300" | bc -l) )); then echo "Good";
             elif (( $(echo "$val < 1000" | bc -l) )); then echo "Fair";
             else echo "Needs Improvement"; fi
