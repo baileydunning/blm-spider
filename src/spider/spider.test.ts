@@ -32,6 +32,7 @@ describe('Spider', () => {
       .mockReturnValueOnce([]);
 
     vi.spyOn(parseDetailModule, 'parseDetailPage').mockResolvedValue({
+      id: 'mock-id',
       name: 'Mock Site',
       description: 'A wonderful place.',
       lat: 39.7392,
