@@ -14,8 +14,12 @@ const PORT = process.env.PORT || 8080;
 export const app = express();
 const swaggerDocument = YAML.load(path.join(__dirname, '../openapi.yaml'));
 
+app.use(compression({
+  level: 9,
+  threshold: 0,
+}));
+
 app.use(cors());
-app.use(compression());
 app.use(express.json());
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
