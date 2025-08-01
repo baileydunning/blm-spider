@@ -1,10 +1,8 @@
 # BLM Spider
 
-This project provides an API for discovering Bureau of Land Management (BLM) campsites across the United States. It combines a custom spider, scheduled automation, and a Node.js server to deliver location data via the /campsites and /campsites/{id} endpoints. A GitHub Actions workflow runs the spider automatically each week, ensuring that the data remains current.
+This project provides an API for discovering Bureau of Land Management (BLM) campsites across the United States. It combines a custom spider, scheduled automation, and a Node.js server to stream location data via the /campsites and /campsites/{id} endpoints. A GitHub Actions workflow runs the spider automatically each week, ensuring that the data remains current.
 
 The spider regularly scans the BLM website, extracts and filters campsite detail pages, and saves the results to a structured JSON dataset. It’s optimized using parallel fetching, persistent connections, retry logic, and in-memory exclusion rules. Geospatial enrichment is performed entirely offline—inferring U.S. state boundaries from coordinates using Turf.js and a local GeoJSON file.
-
-Whether you're building a camping app, visualizing public land usage, or exploring the outdoors, this project offers a fast, lightweight foundation for accessing and working with BLM campsite data.
 
 **Disclaimer:** This dataset is generated through automated scraping and filtering. While best efforts are made to exclude non-campsites (e.g., day-use areas, shooting ranges), accuracy is not guaranteed. Always confirm a site’s legal status and accessibility with the BLM before visiting.
 
@@ -20,13 +18,16 @@ Whether you're building a camping app, visualizing public land usage, or explori
 ## Features
 
 - **High-performance:** Uses parallel fetching, persistent connections, and retry logic for fast, reliable crawling. In-memory filtering reduces noise, and geospatial enrichment is done offline for speed and privacy.
-- **Automated**: Crawls and extracts BLM campsite data on a schedule or on demand.
-- **Scheduled updates:** A GitHub Actions cron job runs the crawler biweekly to keep data fresh.
-- **REST API**: Query, filter, and update campsites via HTTP endpoints.
-- **JSON storage**: All data is stored in `data/blm-campsites.json`.
+- **Streaming support**: The API streams large campsite datasets using Node.js Readable streams. This enables efficient, memory-safe delivery of JSON data even when returning thousands of records—ideal for low-latency clients and frontend pagination.
 - **Image scraping**: Scrapes official BLM photos with credit and alt text when available.
 - **Geolocation enrichment:** Automatically infers the U.S. state from coordinates using @turf/turf and a local GeoJSON file
 - **Exclusion logic**: Filters out irrelevant locations like day use areas or shooting ranges.
+- **Scheduled updates:** A GitHub Actions cron job runs the crawler weekly to keep data fresh.
+- **REST API**: Query, filter, and update campsites via HTTP endpoints.
+- **Pagination and limits:** Supports limit and offset query params for pagination. Defaults to 100 results if no limit is specified. Use limit=all to stream the full dataset.
+- **JSON storage**: All data is stored in `data/blm-campsites.json`.
+- **Rate limiting:** Clients are limited to 100 requests per 15 minutes (per IP) to prevent abuse and ensure server stability.
+- **Error handling:** Graceful error responses for malformed requests, unhandled routes, rate limit violations, and internal server issues.
 
 ---
 
@@ -55,8 +56,8 @@ graph TB
     
     N[API Server<br/>Express.js] --> O[Read JSON File<br/>Load campsite data]
     O --> P[List Endpoint<br/>GET /api/v1/campsites]
-    P --> Q[Filter & Paginate<br/>By state, limit, offset]
-    Q --> R[Return JSON Response<br/>All campsites]
+    P --> Q[Filter, Stream & Paginate<br/>By state, limit, offset]
+    Q --> R[Return Streaming JSON<br/>Low-memory output]
 
     O --> U[Single Endpoint<br/>GET /api/v1/campsites/:id]
     U --> V[Return JSON Response<br/>Single campsite]
@@ -210,6 +211,19 @@ GET /api/v1/campsites/5a1e40b5-4aec-4624-94e0-6f9e757a61de
     "source": "BLM"
   }
 ```
+---
+
+## Error Codes
+
+| Status | Meaning               | Description                                                        |
+| ------ | --------------------- | ------------------------------------------------------------------ |
+| 200    | OK                    | The request was successful                                         |
+| 400    | Bad Request           | The request was malformed (e.g., invalid query format)             |
+| 404    | Not Found             | The requested resource or route does not exist                     |
+| 429    | Too Many Requests     | Rate limit exceeded — max 100 requests per 15-minute window per IP |
+| 500    | Internal Server Error | An unexpected error occurred on the server                         |
+
+
 ---
 
 ## Getting Started

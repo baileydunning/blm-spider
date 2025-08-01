@@ -1,4 +1,4 @@
-import { Campsite } from '../types';
+import { Campsite } from '../../types/index';
 
 export function excludePlaces(site: Partial<Campsite>): { ok: boolean; reason: string } {
   const exclusionTerms = [
