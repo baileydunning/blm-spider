@@ -15,4 +15,3 @@ updates:
       - "dependabot"
     commit-message:
       prefix: "chore"
-      include: "scope"
