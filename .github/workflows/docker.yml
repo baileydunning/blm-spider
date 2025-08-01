@@ -31,10 +31,15 @@ jobs:
 
     - name: Test container starts
       run: |
-        docker run -d --name blm-spider-test -p 8080:8080 blm-spider
+        docker run -d --name blm-spider -p 8080:8080 blm-spider
         sleep 10
-        docker ps | grep blm-spider-test
+        if ! docker ps | grep blm-spider; then
+          echo 'Container failed to start. Printing logs:'
+          docker logs blm-spider || true
+          docker ps -a
+          exit 1
+        fi
 
     - name: Clean up
       if: always()
-      run: docker rm -f blm-spider-test
+      run: docker rm -f blm-spider
