@@ -3,8 +3,9 @@ info:
   title: BLM Spider API
   version: 1.0.0
   description: |
-    An API for exploring Bureau of Land Management (BLM) dispersed campsites across the U.S. This project combines a Node.js server with a web crawler (spider) to extract and serve structured campsite data from the BLM website. Data is enriched with offline geospatial boundaries and made available through RESTful endpoints with support for filtering and pagination. The crawler is optimized for speed and reliability using parallel page fetching, persistent connections, and retry logic. Updates run automatically each week via a GitHub Actions cron job to keep data fresh.
-    > *Disclaimer: Not all results are guaranteed to be valid campsites. Best-effort filters are applied, but users should verify site status with the BLM before visiting.*
+    This API provides structured access to dispersed campsite data from the Bureau of Land Management (BLM), enabling developers to explore public land camping opportunities across the United States. It’s powered by a Node.js server and a custom web crawler (“spider”) that extracts data directly from the BLM website. Each entry is enriched using offline geospatial boundaries—leveraging the Turf.js library to infer missing U.S. state information—and served through RESTful endpoints with support for filtering, pagination, and fast retrieval. The spider is optimized for speed and reliability with parallel fetching, persistent HTTP connections, and retry logic. A GitHub Actions cron job runs the spider automatically each week to keep the dataset up to date.
+
+    > Disclaimer: This dataset is generated through automated scraping and filtering. While best efforts are made to exclude non-campsites (e.g., day-use areas, shooting ranges), accuracy is not guaranteed. Always confirm a site’s legal status and accessibility with the BLM before visiting.
 
     ### CORS Policy 
     All endpoints support [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (Cross-Origin Resource Sharing). This means you can call the API directly from web browsers and client-side applications without additional configuration.
