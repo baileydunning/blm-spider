@@ -1,39 +1,29 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import path from 'path';
-import cors from 'cors';
-import compression from 'compression';
-import rateLimit from 'express-rate-limit';
-import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
-import campsiteRoutes from './routes/campsites';
-import healthRoutes from './routes/health';
-import notFound from './middleware/notFound';
-import errorHandler from './middleware/errorHandler';
+import { databases, logger } from "harperdb";
+import seedData from "../../data/blm-campsites.json";
+import type { Campsite } from "../core/types/index"; 
+import { GetCampsites, GetCampsiteById } from "./resources/campsites.js";
+import { Health } from "./resources/health.js";
+import { Docs } from "./resources/docs.js";
 
-dotenv.config();
-export const app = express();
-const PORT = process.env.PORT || 8080;
+const { Campsite: CampsiteTable } = databases.Campsites;
 
-const swaggerDocument = YAML.load(path.join(__dirname, './docs/openapi.yaml'));
+// @ts-ignore
+if (server?.workerIndex === 0) {
+  (async () => {
+    try {
+      logger.info("Seeding Campsites database…");
+      for (const item of seedData as Campsite[]) {
+        const id = String(item.id ?? Math.random().toString(36).slice(2));
+        await CampsiteTable.put({ ...item, id });
+      }
+      logger.info(`Seeded ${seedData.length} records.`);
+    } catch (e: any) {
+      logger.warn(`Seeding skipped/failed: ${e?.message ?? e}`);
+    }
+  })();
+}
 
-app.use(compression({ level: 9, threshold: 0 }));
-app.use(cors());
-app.use(express.json());
-app.use(rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-}));
-
-app.use('/api/v1/campsites', campsiteRoutes);
-app.use('/health', healthRoutes);
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-app.use(notFound);
-app.use(errorHandler);
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+export const campsites = GetCampsites;
+export const campsite = GetCampsiteById;
+export const health = Health;
+export const docs = Docs;
