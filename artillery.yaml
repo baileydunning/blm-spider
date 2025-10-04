@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:8080"
+  target: "http://localhost:9926"
   phases:
     - duration: 10
       arrivalRate: 10
@@ -9,4 +9,4 @@ config:
 scenarios:
   - flow:
       - get:
-          url: "/api/v1/campsites"
+          url: "/Campsites"
