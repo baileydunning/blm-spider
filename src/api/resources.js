@@ -66,10 +66,8 @@ export class Campsites extends Resource {
 
         let inserted = 0;
         for (const campsite of campsites) {
-            if (CampsitesTable.get({ name: campsite.name }).length === 0) {
-                await CampsitesTable.create(campsite);
-                inserted++;
-            }
+            await CampsitesTable.create(campsite);
+            inserted++;
         }
         return {
             status: 200,
