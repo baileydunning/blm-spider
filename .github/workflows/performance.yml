@@ -51,6 +51,9 @@ jobs:
         THREADS_DEBUG: false
       run: harperdb install
 
+    - name: Install dependencies
+      run: npm ci
+
     - name: Build
       run: npm run build
 
