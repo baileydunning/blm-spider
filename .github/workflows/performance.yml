@@ -72,7 +72,7 @@ jobs:
 
     - name: Run Artillery load test
       id: artillery-run
-      run: artillery run --output artillery-report.json artillery.yml
+      run: artillery run --output artillery-report.json artillery.yaml
 
     - name: Print Artillery report JSON
       run: cat artillery-report.json

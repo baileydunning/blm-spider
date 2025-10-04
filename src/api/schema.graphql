@@ -1,11 +1,11 @@
 type Campsite @table(database: "Campsites") @sealed @export(name: "campsites") {
   id: ID! @primaryKey
-  name: String @indexed
-  url: String
-  lat: Float
-  lng: Float
-  state: String
-  mapLink: String
+  name: String! @indexed
+  url: String!
+  lat: Float!
+  lng: Float!
+  state: String!
+  mapLink: String!
   description: String
   directions: String
   activities: [String] 
@@ -14,7 +14,7 @@ type Campsite @table(database: "Campsites") @sealed @export(name: "campsites") {
   fees: String
   stayLimit: String
   images: [CampsiteImage]
-  source: String
+  source: String!
   createdAt: Date
   updatedAt: Date
 }
