@@ -67,16 +67,6 @@ jobs:
         harperdb deploy project=blm-spider restart=true
         sleep 10
 
-    - name: Wait for HarperDB backend
-      run: |
-        for i in {1..30}; do
-          if curl -sSf http://localhost:9926; then
-            echo "HarperDB backend is up!"; exit 0
-          fi
-          sleep 2
-        done
-        echo "HarperDB backend did not start in time"; exit 1
-
     - name: Install Artillery
       run: npm install -g artillery
 
