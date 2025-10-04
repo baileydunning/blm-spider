@@ -1,0 +1,100 @@
+name: Deploy Component to Instance
+on:
+  workflow_dispatch:
+    inputs:
+      HDB_VERSION:
+        description: Harper Version (latest, 4.6.1, etc)
+        type: string
+        required: true
+        default: latest
+      NODE_VERSION:
+        description: Node.js Version (lts/*, 18, 20, etc)
+        type: string
+        required: true
+        default: lts/*
+      ENVIRONMENT:
+        description: Select the environment to deploy
+        type: choice
+        options:
+          - dev
+          - stage
+          - prod
+        required: true
+        default: dev
+      REFERENCE:
+        description: Branch or commit SHA to deploy
+        type: string
+        required: false
+      RESTART:
+        description: Restart Harper after deploy
+        type: boolean
+        required: true
+        default: true
+      REPLICATED:
+        description: Replicate to all cluster instances
+        type: boolean
+        required: true
+        default: true
+
+jobs:
+  deploy_component:
+    name: Deploy Component to Harper Instance
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ github.event.inputs.ENVIRONMENT }}
+
+    env:
+      HDB_VERSION: ${{ github.event.inputs.HDB_VERSION }}
+      ENVIRONMENT: ${{ github.event.inputs.ENVIRONMENT }}
+      RESTART: ${{ github.event.inputs.RESTART }}
+      REPLICATED: ${{ github.event.inputs.REPLICATED }}
+      HDB_ADMIN_USERNAME: ${{ secrets.HDB_ADMIN_USERNAME }}
+      HDB_ADMIN_PASSWORD: ${{ secrets.HDB_ADMIN_PASSWORD }}
+      HDB_TARGET_URL: ${{ secrets.HDB_TARGET_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.inputs.REFERENCE || github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ github.event.inputs.NODE_VERSION }}
+
+      - name: Copy env file
+        shell: bash
+        run: |
+          chmod +x .github/scripts/set_env_file.sh
+          ./.github/scripts/set_env_file.sh $ENVIRONMENT
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          echo "Installing dependencies..."
+          npm install
+
+      - name: Install Harper
+        shell: bash
+        run: |
+          chmod +x .github/scripts/install_harper.sh
+          ./.github/scripts/install_harper.sh $HDB_VERSION $HDB_ADMIN_USERNAME $HDB_ADMIN_PASSWORD
+
+      - name: Build the app (if repo used TypeScript)
+        shell: bash
+        run: |
+          if [[ -f "./tsconfig.json" ]] && grep -q '"typescript"' package.json; then
+            echo "TypeScript detected via tsconfig.json and dependency check, building the app..."
+            npm run build
+          else
+            echo "TypeScript not detected, skipping build step."
+          fi
+
+      - name: Deploy Harper to target
+        shell: bash
+        run: |
+          chmod +x .github/scripts/deploy_harper_cli.sh
+          ./.github/scripts/deploy_harper_cli.sh $HDB_ADMIN_USERNAME $HDB_ADMIN_PASSWORD $HDB_TARGET_URL $REPLICATED $RESTART
