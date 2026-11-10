@@ -3,13 +3,18 @@ import { parseSearchPage } from './utils/parseSearchPage';
 import { parseDetailPage } from './utils/parseDetailPage';
 import { Campsite, CampsiteImage } from '../types/index';
 import { excludePlaces } from './utils/excludePlaces';
-import { v4 as uuidv4 } from 'uuid';
+import { v5 as uuidv5 } from 'uuid';
 import pLimit from 'p-limit';
 import { getStateFromCoordinates } from '../loaders/getStateFromCoordinates';
 import { cleanText } from './utils/cleanText';
 import { fetchWithRetry } from './utils/httpRequest';
 
 const BASE_URL = 'https://www.blm.gov';
+
+// IDs are derived from each campsite's BLM page URL so they stay the same
+// from one weekly crawl to the next. Campsights uses them in page links and
+// saved favorites.
+export const campsiteId = (detailUrl: string) => uuidv5(detailUrl, uuidv5.URL);
 
 export class Spider {
   private startUrl: string;
@@ -124,7 +129,7 @@ export class Spider {
           console.log(`[Spider] [${page}:${i}] Parsed site: ${site.name || 'Unknown'} (${detailUrl})`);
 
           campsites.push({
-            id: uuidv4(),
+            id: campsiteId(detailUrl),
             name: cleanText(site.name) ?? 'Unknown',
             url: detailUrl,
             description: site.description && cleanText(site.description),

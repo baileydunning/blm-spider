@@ -98,7 +98,7 @@ graph TB
 
 ```typescript
 interface Campsite {
-  id: string;
+  id: string; // UUID v5 of the BLM page URL, so it stays the same across crawls
   name: string;
   url: string;
   lat: number;
