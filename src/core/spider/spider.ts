@@ -1,15 +1,21 @@
 import { load } from 'cheerio';
-import { parseSearchPage } from './utils/parseSearchPage';
+import { parseSitemapLocs, visitPaths } from './utils/parseSitemap';
 import { parseDetailPage } from './utils/parseDetailPage';
 import { Campsite, CampsiteImage } from '../types/index';
 import { excludePlaces } from './utils/excludePlaces';
-import { v4 as uuidv4 } from 'uuid';
+import { v5 as uuidv5 } from 'uuid';
 import pLimit from 'p-limit';
 import { getStateFromCoordinates } from '../loaders/getStateFromCoordinates';
 import { cleanText } from './utils/cleanText';
 import { fetchWithRetry } from './utils/httpRequest';
 
 const BASE_URL = 'https://www.blm.gov';
+const SITEMAP_URL = `${BASE_URL}/sitemap.xml`;
+
+// IDs are derived from each campsite's BLM page URL so they stay the same
+// from one weekly crawl to the next. Campsights uses them in page links and
+// saved favorites.
+export const campsiteId = (detailUrl: string) => uuidv5(detailUrl, uuidv5.URL);
 
 export class Spider {
   private startUrl: string;
@@ -41,36 +47,36 @@ export class Spider {
       },
     };
 
-    const crawlPages = async (baseUrl: string) => {
+    // BLM's search results page sits behind an Akamai bot check, so links come
+    // from the public sitemap instead.
+    const crawlPages = async () => {
       console.time('[Spider] Page crawl duration');
 
-      let page = 0;
       const allDetailLinks: { relativeUrl: string; page: number; i: number }[] = [];
 
-      while (true) {
-        const pageUrl = `${baseUrl}&page=${page}`;
-        if (visited.has(`search:${pageUrl}`)) break;
-        visited.add(`search:${pageUrl}`);
+      let sitemapPages: string[] = [];
+      try {
+        sitemapPages = parseSitemapLocs(await fetchWithRetry(SITEMAP_URL));
+      } catch (err) {
+        console.error(`[Spider] Failed to fetch sitemap index: ${SITEMAP_URL}`, err);
+      }
 
-        let html: string;
+      const visitUrls: string[] = [];
+      for (const pageUrl of sitemapPages) {
+        if (visited.has(`sitemap:${pageUrl}`)) continue;
+        visited.add(`sitemap:${pageUrl}`);
         try {
-          html = await fetchWithRetry(pageUrl);
+          visitUrls.push(...parseSitemapLocs(await fetchWithRetry(pageUrl)));
           stats.pagesFetched++;
         } catch (err) {
-          console.error(`[Spider] Failed to fetch search page: ${pageUrl}`, err);
-          break;
+          console.error(`[Spider] Failed to fetch sitemap page: ${pageUrl}`, err);
         }
-
-        const $ = load(html);
-        const detailLinks = parseSearchPage($);
-        stats.detailLinksFound += detailLinks.length;
-
-        console.log(`[Spider] Page ${page}: found ${detailLinks.length} detail links.`);
-        if (detailLinks.length === 0) break;
-
-        allDetailLinks.push(...detailLinks.map((relativeUrl, i) => ({ relativeUrl, page, i })));
-        page++;
       }
+
+      const paths = visitPaths(visitUrls);
+      stats.detailLinksFound = paths.length;
+      console.log(`[Spider] Sitemap: ${sitemapPages.length} pages, ${paths.length} visit links.`);
+      allDetailLinks.push(...paths.map((relativeUrl, i) => ({ relativeUrl, page: 0, i })));
 
       console.timeEnd('[Spider] Page crawl duration');
       console.log(`[Spider] Total detail links to process: ${allDetailLinks.length}`);
@@ -124,7 +130,7 @@ export class Spider {
           console.log(`[Spider] [${page}:${i}] Parsed site: ${site.name || 'Unknown'} (${detailUrl})`);
 
           campsites.push({
-            id: uuidv4(),
+            id: campsiteId(detailUrl),
             name: cleanText(site.name) ?? 'Unknown',
             url: detailUrl,
             description: site.description && cleanText(site.description),
@@ -161,12 +167,8 @@ export class Spider {
       console.timeEnd('[Spider] Detail fetch duration');
     };
 
-    const urlParams = new URLSearchParams(this.startUrl.split('?')[1]);
-    const query = urlParams.get('query') || '';
-    const baseUrl = `${BASE_URL}/visit/search?query=${query}`;
-
     console.log('[Spider] Starting crawl...');
-    await crawlPages(baseUrl);
+    await crawlPages();
     const jobEnd = performance.now();
     const totalMs = jobEnd - jobStart;
     const totalSeconds = Math.floor(totalMs / 1000);
